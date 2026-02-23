@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from config import WORKSPACE_DIR
+from services import workspace
 
 
 class PathTraversalError(Exception):
@@ -10,7 +10,7 @@ class PathTraversalError(Exception):
 
 
 def _safe_path(project_id: str, relative_path: str) -> Path:
-    base = (WORKSPACE_DIR / project_id).resolve()
+    base = workspace.resolve(project_id)
     target = (base / relative_path).resolve()
     if not str(target).startswith(str(base)):
         raise PathTraversalError(f"Path traversal denied: {relative_path}")
@@ -18,7 +18,7 @@ def _safe_path(project_id: str, relative_path: str) -> Path:
 
 
 def _project_root(project_id: str) -> Path:
-    root = (WORKSPACE_DIR / project_id).resolve()
+    root = workspace.resolve(project_id)
     if not root.exists():
         root.mkdir(parents=True, exist_ok=True)
     return root

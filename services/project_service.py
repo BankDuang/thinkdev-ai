@@ -1,4 +1,5 @@
 import asyncio
+import re
 import shutil
 from pathlib import Path
 
@@ -7,6 +8,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import WORKSPACE_DIR
 from models import Project
+from services import workspace
+
+
+def _slugify(name: str) -> str:
+    """Convert project name to a filesystem-safe slug."""
+    slug = name.lower().strip()
+    slug = re.sub(r'[^a-z0-9]+', '-', slug)
+    slug = slug.strip('-')
+    return slug or 'project'
+
+
+def _unique_workspace_dir(name: str) -> Path:
+    """Get a unique workspace directory path based on project name."""
+    slug = _slugify(name)
+    path = WORKSPACE_DIR / slug
+    if not path.exists():
+        return path
+    # Append number if exists
+    i = 2
+    while (WORKSPACE_DIR / f"{slug}-{i}").exists():
+        i += 1
+    return WORKSPACE_DIR / f"{slug}-{i}"
 
 
 async def list_projects(db: AsyncSession) -> list[Project]:
@@ -24,14 +47,20 @@ async def create_project(
     description: str = "",
     git_repository_url: str = "",
 ) -> Project:
-    project = Project(name=name, description=description, git_repository_url=git_repository_url)
+    # Determine workspace directory name from project name
+    workspace_path = _unique_workspace_dir(name)
+    workspace_name = workspace_path.name
+
+    project = Project(name=name, description=description, git_repository_url=git_repository_url, workspace_dir=workspace_name)
     db.add(project)
     await db.commit()
     await db.refresh(project)
 
     # Create workspace directory
-    workspace_path = WORKSPACE_DIR / project.id
     workspace_path.mkdir(parents=True, exist_ok=True)
+
+    # Register mapping
+    workspace.register(project.id, workspace_name)
 
     # Clone git repo if provided
     if git_repository_url.strip():
@@ -50,8 +79,17 @@ async def update_project(
     project = await db.get(Project, project_id)
     if not project:
         return None
-    if name is not None:
+
+    # Rename workspace dir if name changed
+    if name is not None and name != project.name:
+        old_path = WORKSPACE_DIR / project.workspace_dir
+        new_path = _unique_workspace_dir(name)
+        if old_path.exists():
+            old_path.rename(new_path)
+        project.workspace_dir = new_path.name
         project.name = name
+        workspace.register(project.id, new_path.name)
+
     if description is not None:
         project.description = description
     if git_repository_url is not None:
@@ -67,10 +105,11 @@ async def delete_project(db: AsyncSession, project_id: str) -> bool:
         return False
 
     # Remove workspace directory
-    workspace_path = WORKSPACE_DIR / project_id
+    workspace_path = WORKSPACE_DIR / project.workspace_dir
     if workspace_path.exists():
         shutil.rmtree(workspace_path, ignore_errors=True)
 
+    workspace.unregister(project_id)
     await db.delete(project)
     await db.commit()
     return True
@@ -78,6 +117,10 @@ async def delete_project(db: AsyncSession, project_id: str) -> bool:
 
 def get_workspace_path(project_id: str) -> Path:
     return WORKSPACE_DIR / project_id
+
+
+def get_workspace_path_by_dir(workspace_dir: str) -> Path:
+    return WORKSPACE_DIR / workspace_dir
 
 
 async def _git_clone(url: str, dest: Path):

@@ -9,7 +9,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Optional
 
-from config import WORKSPACE_DIR, TERMINAL_BUFFER_SIZE, TERMINAL_SHELL
+from config import TERMINAL_BUFFER_SIZE, TERMINAL_SHELL
+from services import workspace
 
 
 @dataclass
@@ -37,8 +38,8 @@ class TerminalSessionManager:
         return cls._instance
 
     def create_session(self, session_id: str, project_id: str, name: str = "bash") -> SessionInfo:
-        workspace = WORKSPACE_DIR / project_id
-        workspace.mkdir(parents=True, exist_ok=True)
+        ws_path = workspace.resolve(project_id)
+        ws_path.mkdir(parents=True, exist_ok=True)
 
         pid, fd = pty.openpty()
         child_pid = os.fork()
@@ -54,7 +55,7 @@ class TerminalSessionManager:
             os.dup2(fd, 2)
             if fd > 2:
                 os.close(fd)
-            os.chdir(str(workspace))
+            os.chdir(str(ws_path))
             env = os.environ.copy()
             env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "truecolor"

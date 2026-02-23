@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 from dataclasses import dataclass
 
-from config import WORKSPACE_DIR
+from services import workspace
 
 
 @dataclass
@@ -27,7 +27,7 @@ class GitLogEntry:
 
 
 def _project_path(project_id: str) -> Path:
-    return (WORKSPACE_DIR / project_id).resolve()
+    return workspace.resolve(project_id)
 
 
 async def _run_git(project_path: Path, *args: str) -> tuple[int, str, str]:
