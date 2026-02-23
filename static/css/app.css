@@ -53,12 +53,14 @@ body {
 .app-layout {
     display: grid;
     grid-template-columns: var(--left-w) 1fr var(--right-w);
-    grid-template-rows: 1fr var(--bottom-h);
+    grid-template-rows: 1fr 4px var(--bottom-h);
     grid-template-areas:
         "left center right"
+        "handle handle handle"
         "bottom bottom bottom";
     height: calc(100vh - var(--header-h));
 }
+#terminal-resize-handle { grid-area: handle; }
 .panel-left   { grid-area: left;   background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
 .panel-center { grid-area: center; background: var(--bg-primary);   display: flex; flex-direction: column; overflow: hidden; }
 .panel-right  { grid-area: right;  background: var(--bg-secondary); border-left: 1px solid var(--border);  display: flex; flex-direction: column; overflow: hidden; }

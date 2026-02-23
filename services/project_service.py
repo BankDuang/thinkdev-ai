@@ -11,25 +11,25 @@ from models import Project
 from services import workspace
 
 
-def _slugify(name: str) -> str:
-    """Convert project name to a filesystem-safe slug."""
-    slug = name.lower().strip()
-    slug = re.sub(r'[^a-z0-9]+', '-', slug)
-    slug = slug.strip('-')
-    return slug or 'project'
+def _safe_dirname(name: str) -> str:
+    """Sanitize project name for use as a directory name. Keeps original casing and spaces."""
+    safe = name.strip()
+    safe = re.sub(r'[/\\:*?"<>|]', '', safe)  # Remove dangerous chars
+    safe = re.sub(r'\.\.+', '.', safe)  # Prevent path traversal
+    safe = safe.strip('. ')
+    return safe or 'project'
 
 
 def _unique_workspace_dir(name: str) -> Path:
     """Get a unique workspace directory path based on project name."""
-    slug = _slugify(name)
-    path = WORKSPACE_DIR / slug
+    dirname = _safe_dirname(name)
+    path = WORKSPACE_DIR / dirname
     if not path.exists():
         return path
-    # Append number if exists
     i = 2
-    while (WORKSPACE_DIR / f"{slug}-{i}").exists():
+    while (WORKSPACE_DIR / f"{dirname} ({i})").exists():
         i += 1
-    return WORKSPACE_DIR / f"{slug}-{i}"
+    return WORKSPACE_DIR / f"{dirname} ({i})"
 
 
 async def list_projects(db: AsyncSession) -> list[Project]:

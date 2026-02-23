@@ -343,7 +343,7 @@ function _refitXterm() {
 
 function _setTerminalHeight(h) {
     var layout = document.querySelector('.app-layout');
-    if (layout) layout.style.gridTemplateRows = '1fr ' + h + 'px';
+    if (layout) layout.style.gridTemplateRows = '1fr 4px ' + h + 'px';
     _refitXterm();
 }
 
@@ -394,50 +394,42 @@ function toggleTerminalMaximize() {
 
 (function() {
     var layout = document.querySelector('.app-layout');
-    if (!layout) return;
-
-    // Bottom panel resize (vertical drag handle)
+    var vHandle = document.getElementById('terminal-resize-handle');
     var bottomPanel = document.querySelector('.panel-bottom');
-    if (bottomPanel) {
-        var vHandle = document.createElement('div');
-        vHandle.className = 'resize-handle-v';
-        bottomPanel.parentNode.insertBefore(vHandle, bottomPanel);
+    if (!layout || !vHandle || !bottomPanel) return;
 
-        var startY, startH;
-        vHandle.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            // If minimized/maximized, reset to normal first
-            if (_terminalState !== 'normal') {
-                bottomPanel.classList.remove('minimized', 'maximized');
-                _terminalState = 'normal';
-            }
-            startY = e.clientY;
-            startH = bottomPanel.offsetHeight;
-            vHandle.classList.add('active');
-            document.body.style.cursor = 'row-resize';
-            document.body.style.userSelect = 'none';
-            document.addEventListener('mousemove', onVMove);
-            document.addEventListener('mouseup', onVUp);
-        });
-        function onVMove(e) {
-            var delta = startY - e.clientY;
-            var newH = Math.max(34, Math.min(startH + delta, window.innerHeight - 100));
-            layout.style.gridTemplateRows = '1fr ' + newH + 'px';
+    var startY, startH;
+    vHandle.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        if (_terminalState !== 'normal') {
+            bottomPanel.classList.remove('minimized', 'maximized');
+            _terminalState = 'normal';
         }
-        function onVUp() {
-            vHandle.classList.remove('active');
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            document.removeEventListener('mousemove', onVMove);
-            document.removeEventListener('mouseup', onVUp);
-            _refitXterm();
-        }
-
-        // Double-click resize handle to toggle minimize
-        vHandle.addEventListener('dblclick', function() {
-            toggleTerminalMinimize();
-        });
+        startY = e.clientY;
+        startH = bottomPanel.offsetHeight;
+        vHandle.classList.add('active');
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+        document.addEventListener('mousemove', onVMove);
+        document.addEventListener('mouseup', onVUp);
+    });
+    function onVMove(e) {
+        var delta = startY - e.clientY;
+        var newH = Math.max(34, Math.min(startH + delta, window.innerHeight - 100));
+        layout.style.gridTemplateRows = '1fr 4px ' + newH + 'px';
     }
+    function onVUp() {
+        vHandle.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onVMove);
+        document.removeEventListener('mouseup', onVUp);
+        _refitXterm();
+    }
+
+    vHandle.addEventListener('dblclick', function() {
+        toggleTerminalMinimize();
+    });
 })();
 
 // ═══════════════════════════════════════
