@@ -13,10 +13,16 @@
                     title="Save (Ctrl+S)">Save</button>
         </div>
     </div>
-    <textarea id="code-editor"
-              class="code-textarea"
-              spellcheck="false"
-              data-project-id="{{ project_id }}"
-              data-file-path="{{ file_path }}"
-              oninput="markUnsaved()">{{ content }}</textarea>
+    <div class="editor-body">
+        <div class="line-numbers" id="line-numbers"></div>
+        <textarea id="code-editor"
+                  class="code-textarea"
+                  spellcheck="false"
+                  wrap="off"
+                  data-project-id="{{ project_id }}"
+                  data-file-path="{{ file_path }}"
+                  oninput="markUnsaved(); updateLineNumbers();"
+                  onscroll="syncLineNumbers()">{{ content }}</textarea>
+    </div>
 </div>
+<script>updateLineNumbers();</script>

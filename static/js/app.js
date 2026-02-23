@@ -21,6 +21,27 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// Line numbers for code editor
+function updateLineNumbers() {
+    var editor = document.getElementById('code-editor');
+    var gutter = document.getElementById('line-numbers');
+    if (!editor || !gutter) return;
+    var lines = editor.value.split('\n').length;
+    var html = '';
+    for (var i = 1; i <= lines; i++) {
+        html += '<div>' + i + '</div>';
+    }
+    gutter.innerHTML = html;
+    syncLineNumbers();
+}
+
+function syncLineNumbers() {
+    var editor = document.getElementById('code-editor');
+    var gutter = document.getElementById('line-numbers');
+    if (!editor || !gutter) return;
+    gutter.scrollTop = editor.scrollTop;
+}
+
 // Tab key in editor inserts tab character
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Tab' && e.target.id === 'code-editor') {
