@@ -434,6 +434,106 @@ function toggleTerminalMaximize() {
 })();
 
 // ═══════════════════════════════════════
+// Left / Right Panel Resize + Collapse
+// ═══════════════════════════════════════
+
+var _leftW = 250;
+var _rightW = 260;
+var _leftCollapsed = false;
+var _rightCollapsed = false;
+
+function _updateColumns() {
+    var layout = document.querySelector('.app-layout');
+    if (!layout) return;
+    var lw = _leftCollapsed ? '0px' : _leftW + 'px';
+    var lh = _leftCollapsed ? '0px' : '4px';
+    var rw = _rightCollapsed ? '0px' : _rightW + 'px';
+    var rh = _rightCollapsed ? '0px' : '4px';
+    layout.style.gridTemplateColumns = lw + ' ' + lh + ' 1fr ' + rh + ' ' + rw;
+    layout.classList.toggle('left-collapsed', _leftCollapsed);
+    layout.classList.toggle('right-collapsed', _rightCollapsed);
+}
+
+function toggleLeftPanel() {
+    if (!_leftCollapsed) {
+        _leftW = document.querySelector('.panel-left').offsetWidth || 250;
+    }
+    _leftCollapsed = !_leftCollapsed;
+    _updateColumns();
+}
+
+function toggleRightPanel() {
+    if (!_rightCollapsed) {
+        _rightW = document.querySelector('.panel-right').offsetWidth || 260;
+    }
+    _rightCollapsed = !_rightCollapsed;
+    _updateColumns();
+}
+
+(function() {
+    var layout = document.querySelector('.app-layout');
+    if (!layout) return;
+
+    // Left handle drag
+    var lHandle = document.getElementById('left-resize-handle');
+    if (lHandle) {
+        var startX, startW;
+        lHandle.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            startX = e.clientX;
+            startW = document.querySelector('.panel-left').offsetWidth;
+            lHandle.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onLMove);
+            document.addEventListener('mouseup', onLUp);
+        });
+        function onLMove(e) {
+            var newW = Math.max(120, Math.min(startW + (e.clientX - startX), window.innerWidth / 2));
+            _leftW = newW;
+            layout.style.gridTemplateColumns = newW + 'px 4px 1fr 4px ' + (_rightCollapsed ? '0px' : _rightW + 'px');
+        }
+        function onLUp() {
+            lHandle.classList.remove('active');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onLMove);
+            document.removeEventListener('mouseup', onLUp);
+        }
+        lHandle.addEventListener('dblclick', function() { toggleLeftPanel(); });
+    }
+
+    // Right handle drag
+    var rHandle = document.getElementById('right-resize-handle');
+    if (rHandle) {
+        var startX2, startW2;
+        rHandle.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            startX2 = e.clientX;
+            startW2 = document.querySelector('.panel-right').offsetWidth;
+            rHandle.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onRMove);
+            document.addEventListener('mouseup', onRUp);
+        });
+        function onRMove(e) {
+            var newW = Math.max(120, Math.min(startW2 - (e.clientX - startX2), window.innerWidth / 2));
+            _rightW = newW;
+            layout.style.gridTemplateColumns = (_leftCollapsed ? '0px' : _leftW + 'px') + ' 4px 1fr 4px ' + newW + 'px';
+        }
+        function onRUp() {
+            rHandle.classList.remove('active');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onRMove);
+            document.removeEventListener('mouseup', onRUp);
+        }
+        rHandle.addEventListener('dblclick', function() { toggleRightPanel(); });
+    }
+})();
+
+// ═══════════════════════════════════════
 // Right-Click Context Menu for File Tree
 // ═══════════════════════════════════════
 

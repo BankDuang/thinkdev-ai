@@ -16,6 +16,7 @@
 <body hx-headers='{"X-Requested-With": "XMLHttpRequest"}'>
     <header class="app-header">
         <div class="header-left">
+            <button class="btn-icon btn-xs" title="Toggle Left Panel" onclick="toggleLeftPanel()" style="margin-right:6px">&#9776;</button>
             <span class="logo"><img src="/static/images/logo.png" alt="ThinkDev AI" class="logo-img"> ThinkDev AI</span>
         </div>
         <div class="header-center" id="active-project-name">
@@ -27,6 +28,7 @@
         </div>
         <div class="header-right">
             <span class="status-dot"></span> Ready
+            <button class="btn-icon btn-xs" title="Toggle Right Panel" onclick="toggleRightPanel()" style="margin-left:6px">&#9776;</button>
         </div>
     </header>
 

@@ -6,6 +6,8 @@
     <div class="panel-section" id="projects-panel">
         <div class="panel-header">
             <span>Projects</span>
+            <span style="flex:1"></span>
+            <button class="btn-icon btn-xs" title="Collapse Left Panel" onclick="toggleLeftPanel()">&#9664;</button>
             <button class="btn-icon" title="New Project"
                     hx-get="/projects/create-form"
                     hx-target="#modal-container"
@@ -26,6 +28,9 @@
     </div>
 </aside>
 
+<!-- Left Resize Handle -->
+<div id="left-resize-handle"></div>
+
 <!-- Center Panel -->
 <section class="panel-center">
     <div id="editor-area">
@@ -36,11 +41,16 @@
     </div>
 </section>
 
+<!-- Right Resize Handle -->
+<div id="right-resize-handle"></div>
+
 <!-- Right Panel -->
 <aside class="panel-right">
     <div class="panel-section" id="git-panel">
         <div class="panel-header">
             <span>Git</span>
+            <span style="flex:1"></span>
+            <button class="btn-icon btn-xs" title="Collapse Right Panel" onclick="toggleRightPanel()">&#9654;</button>
         </div>
         <div id="git-content">
             <div class="empty-state">Select a project</div>

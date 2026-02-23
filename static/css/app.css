@@ -52,19 +52,32 @@ body {
 /* ── Layout ── */
 .app-layout {
     display: grid;
-    grid-template-columns: var(--left-w) 1fr var(--right-w);
+    grid-template-columns: var(--left-w) 4px 1fr 4px var(--right-w);
     grid-template-rows: 1fr 4px var(--bottom-h);
     grid-template-areas:
-        "left center right"
-        "handle handle handle"
-        "bottom bottom bottom";
+        "left lhandle center rhandle right"
+        "vhandle vhandle vhandle vhandle vhandle"
+        "bottom bottom bottom bottom bottom";
     height: calc(100vh - var(--header-h));
 }
-#terminal-resize-handle { grid-area: handle; }
-.panel-left   { grid-area: left;   background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.panel-center { grid-area: center; background: var(--bg-primary);   display: flex; flex-direction: column; overflow: hidden; }
-.panel-right  { grid-area: right;  background: var(--bg-secondary); border-left: 1px solid var(--border);  display: flex; flex-direction: column; overflow: hidden; }
+#terminal-resize-handle { grid-area: vhandle; }
+#left-resize-handle  { grid-area: lhandle; cursor: col-resize; background: transparent; z-index: 10; transition: background 0.2s; }
+#right-resize-handle { grid-area: rhandle; cursor: col-resize; background: transparent; z-index: 10; transition: background 0.2s; }
+#left-resize-handle:hover, #left-resize-handle.active,
+#right-resize-handle:hover, #right-resize-handle.active { background: var(--accent); }
+.panel-left   { grid-area: left;   background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.panel-center { grid-area: center; background: var(--bg-primary);   display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.panel-right  { grid-area: right;  background: var(--bg-secondary); border-left: 1px solid var(--border);  display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 .panel-bottom { grid-area: bottom; background: var(--bg-secondary); border-top: 1px solid var(--border);   display: flex; flex-direction: column; overflow: hidden; }
+
+/* Collapsed side panels */
+.app-layout.left-collapsed  { grid-template-columns: 0px 0px 1fr 4px var(--right-w); }
+.app-layout.right-collapsed { grid-template-columns: var(--left-w) 4px 1fr 0px 0px; }
+.app-layout.left-collapsed.right-collapsed { grid-template-columns: 0px 0px 1fr 0px 0px; }
+.app-layout.left-collapsed .panel-left,
+.app-layout.left-collapsed #left-resize-handle { display: none; }
+.app-layout.right-collapsed .panel-right,
+.app-layout.right-collapsed #right-resize-handle { display: none; }
 
 /* ── Panel Sections ── */
 .panel-section { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
