@@ -3,16 +3,16 @@
     <div class="terminal-tabs" id="terminal-tabs">
         {% if sessions %}
             {% for s in sessions %}
-            <button class="terminal-tab {% if s.session_id == active_session_id %}active{% endif %}"
-                    data-session-id="{{ s.session_id }}"
-                    data-project-id="{{ s.project_id }}"
-                    onclick="switchTerminalTab('{{ s.session_id }}')">
+            <div class="terminal-tab {% if s.session_id == active_session_id %}active{% endif %}"
+                 data-session-id="{{ s.session_id }}"
+                 data-project-id="{{ s.project_id }}"
+                 onclick="switchTerminalTab('{{ s.session_id }}')">
                 <span class="terminal-tab-indicator {{ 'running' if s.status == 'running' else 'stopped' }}"></span>
                 <span class="terminal-tab-name">{{ s.name }}</span>
-                <button class="btn-icon btn-xs terminal-tab-close"
-                        onclick="event.stopPropagation(); closeTerminalTab('{{ s.session_id }}')"
-                        title="Close">&#10005;</button>
-            </button>
+                <span class="btn-icon btn-xs terminal-tab-close"
+                      onclick="event.stopPropagation(); closeTerminalTab('{{ s.session_id }}')"
+                      title="Close">&#10005;</span>
+            </div>
             {% endfor %}
         {% else %}
             <span class="empty-state-inline">No terminals</span>

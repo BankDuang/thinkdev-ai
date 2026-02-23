@@ -43,7 +43,8 @@ body {
     border-bottom: 1px solid var(--border);
     user-select: none;
 }
-.logo { font-weight: 700; font-size: 14px; color: var(--accent); }
+.logo { font-weight: 700; font-size: 14px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.logo-img { height: 24px; width: 24px; border-radius: 4px; object-fit: cover; filter: drop-shadow(0 0 4px var(--accent)); }
 .header-center { color: var(--text-secondary); font-size: 12px; }
 .header-right { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); display: inline-block; }
@@ -360,7 +361,8 @@ body {
 .terminal-tab-indicator.running { background: var(--success); }
 .terminal-tab-indicator.stopped { background: var(--text-muted); }
 .terminal-tab-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
-.terminal-tab-close { font-size: 9px; width: 14px; height: 14px; opacity: 0; transition: opacity 0.1s; }
+.terminal-tab-close { font-size: 9px; width: 14px; height: 14px; opacity: 0; transition: opacity 0.1s; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px; }
+.terminal-tab-close:hover { background: var(--danger); color: #fff; }
 .terminal-tab:hover .terminal-tab-close { opacity: 1; }
 .terminal-output {
     flex: 1;

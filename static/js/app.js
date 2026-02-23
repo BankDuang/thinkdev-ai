@@ -200,15 +200,67 @@ function disconnectTerminal() {
     }
 }
 
+function autoConnectActiveTerminal() {
+    // Find the active terminal tab in the DOM and connect its WS
+    setTimeout(function() {
+        var activeTab = document.querySelector('.terminal-tab.active');
+        if (activeTab && activeTab.dataset.sessionId) {
+            connectTerminal(activeTab.dataset.sessionId);
+        }
+    }, 150);
+}
+
 function handleTerminalInput(event) {
+    var input = document.getElementById('terminal-input');
+    if (!input) return;
+
+    // Ctrl+key combos — send control characters
+    if (event.ctrlKey && !event.metaKey && !event.altKey) {
+        var ctrlMap = {
+            'c': '\x03', 'd': '\x04', 'z': '\x1a', 'l': '\x0c',
+            'a': '\x01', 'e': '\x05', 'u': '\x15', 'k': '\x0b',
+            'w': '\x17', 'r': '\x12'
+        };
+        var ch = ctrlMap[event.key.toLowerCase()];
+        if (ch) {
+            event.preventDefault();
+            sendToTerminal(ch);
+            return;
+        }
+    }
+
+    // Arrow keys
+    var arrowMap = {
+        'ArrowUp': '\x1b[A', 'ArrowDown': '\x1b[B',
+        'ArrowRight': '\x1b[C', 'ArrowLeft': '\x1b[D'
+    };
+    if (arrowMap[event.key]) {
+        event.preventDefault();
+        sendToTerminal(arrowMap[event.key]);
+        return;
+    }
+
+    // Enter — send command
     if (event.key === 'Enter') {
         event.preventDefault();
-        var input = document.getElementById('terminal-input');
-        if (!input || !terminalWS || terminalWS.readyState !== WebSocket.OPEN) return;
         var cmd = input.value + '\n';
-        terminalWS.send(cmd);
+        sendToTerminal(cmd);
         input.value = '';
     }
+
+    // Tab — send tab character
+    if (event.key === 'Tab') {
+        event.preventDefault();
+        sendToTerminal('\t');
+    }
+}
+
+function sendToTerminal(data) {
+    if (!terminalWS || terminalWS.readyState !== WebSocket.OPEN) {
+        console.warn('Terminal WS not connected, state:', terminalWS ? terminalWS.readyState : 'null');
+        return;
+    }
+    terminalWS.send(data);
 }
 
 function createTerminal() {
@@ -222,6 +274,7 @@ function createTerminal() {
         .then(function(html) {
             var container = document.getElementById('terminal-container');
             if (container) { container.innerHTML = html; htmx.process(container); }
+            autoConnectActiveTerminal();
         });
 }
 
@@ -242,6 +295,7 @@ function closeTerminalTab(sessionId) {
         .then(function(html) {
             var container = document.getElementById('terminal-container');
             if (container) { container.innerHTML = html; htmx.process(container); }
+            autoConnectActiveTerminal();
         });
 }
 
@@ -411,11 +465,10 @@ function launchAICLI(tool) {
         .then(function(html) {
             var container = document.getElementById('terminal-container');
             if (container) { container.innerHTML = html; htmx.process(container); }
-            // Send the tool command after a short delay to let WS connect
+            autoConnectActiveTerminal();
+            // Send the tool command after WS connects
             setTimeout(function() {
-                if (terminalWS && terminalWS.readyState === WebSocket.OPEN) {
-                    terminalWS.send(tool + '\n');
-                }
+                sendToTerminal(tool + '\n');
             }, 500);
             setTimeout(refreshSessionManager, 600);
         });

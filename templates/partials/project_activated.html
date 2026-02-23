@@ -28,12 +28,16 @@
         loadInto('/files/' + pid + '/tree', 'file-tree');
         // Load git status
         loadInto('/git/' + pid + '/status', 'git-content');
-        // Load terminal sessions
-        loadInto('/terminal/sessions/' + pid, 'terminal-container');
+        // Load terminal sessions + auto-connect WS
+        fetch('/terminal/sessions/' + pid).then(function(r) { return r.text(); }).then(function(html) {
+            var tc = document.getElementById('terminal-container');
+            if (tc) { tc.innerHTML = html; if (window.htmx) htmx.process(tc); }
+            if (typeof autoConnectActiveTerminal === 'function') autoConnectActiveTerminal();
+        });
 
         // Update session manager after terminal loads
         setTimeout(function() {
             if (typeof refreshSessionManager === 'function') refreshSessionManager();
-        }, 300);
+        }, 400);
     })();
 </script>
