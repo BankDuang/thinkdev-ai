@@ -131,17 +131,32 @@ async def activate_project(
 
 
 @router.get("/github/repos", response_class=JSONResponse)
-async def github_repos(username: str):
-    """Fetch public repos for a GitHub username."""
+async def github_repos(username: str, token: str = ""):
+    """Fetch repos for a GitHub username. With token, includes private repos."""
     if not username.strip():
         return JSONResponse({"repos": [], "error": "Username required"})
     try:
+        headers = {"Accept": "application/vnd.github.v3+json"}
+        if token.strip():
+            headers["Authorization"] = f"token {token.strip()}"
+
         async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(
-                f"https://api.github.com/users/{username.strip()}/repos",
-                params={"per_page": 100, "sort": "updated", "direction": "desc"},
-                headers={"Accept": "application/vnd.github.v3+json"},
-            )
+            # If token provided, fetch all repos (including private) for authenticated user
+            if token.strip():
+                resp = await client.get(
+                    "https://api.github.com/user/repos",
+                    params={"per_page": 100, "sort": "updated", "direction": "desc",
+                            "affiliation": "owner"},
+                    headers=headers,
+                )
+            else:
+                resp = await client.get(
+                    f"https://api.github.com/users/{username.strip()}/repos",
+                    params={"per_page": 100, "sort": "updated", "direction": "desc"},
+                    headers=headers,
+                )
+            if resp.status_code == 401:
+                return JSONResponse({"repos": [], "error": "Invalid token"})
             if resp.status_code == 404:
                 return JSONResponse({"repos": [], "error": "User not found"})
             resp.raise_for_status()
@@ -156,7 +171,6 @@ async def github_repos(username: str):
                     "private": r["private"],
                 }
                 for r in resp.json()
-                if not r["private"]
             ]
             return JSONResponse({"repos": repos})
     except httpx.HTTPStatusError as e:

@@ -26,6 +26,12 @@
                     <button type="button" class="btn btn-primary" onclick="fetchGitHubRepos()" style="flex-shrink:0">Search</button>
                 </div>
             </div>
+            <div class="form-group">
+                <label>Personal Access Token <span style="color:var(--text-muted);font-weight:400">(optional, for private repos)</span></label>
+                <input type="password" id="github-token" placeholder="ghp_xxxx..."
+                       onkeydown="if(event.key==='Enter'){event.preventDefault();fetchGitHubRepos();}">
+                <small class="form-hint">Generate at github.com/settings/tokens. Needed to see private repos.</small>
+            </div>
             <div id="github-repo-list" class="github-repo-list"></div>
         </div>
         {% endif %}
@@ -82,9 +88,12 @@ function switchProjectTab(tab, btn) {
 function fetchGitHubRepos() {
     var username = document.getElementById('github-username').value.trim();
     if (!username) return;
+    var token = document.getElementById('github-token') ? document.getElementById('github-token').value.trim() : '';
     var list = document.getElementById('github-repo-list');
     list.innerHTML = '<div class="empty-state" style="padding:12px">Loading repos...</div>';
-    fetch('/projects/github/repos?username=' + encodeURIComponent(username))
+    var url = '/projects/github/repos?username=' + encodeURIComponent(username);
+    if (token) url += '&token=' + encodeURIComponent(token);
+    fetch(url)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.error) {
@@ -92,16 +101,21 @@ function fetchGitHubRepos() {
                 return;
             }
             if (!data.repos.length) {
-                list.innerHTML = '<div class="empty-state" style="padding:12px">No public repos found</div>';
+                list.innerHTML = '<div class="empty-state" style="padding:12px">No repos found</div>';
                 return;
             }
             var html = '';
             data.repos.forEach(function(repo) {
+                var cloneUrl = repo.clone_url;
+                if (repo.private && token) {
+                    cloneUrl = cloneUrl.replace('https://', 'https://' + token + '@');
+                }
                 html += '<div class="github-repo-item" onclick="selectGitHubRepo(this)" ' +
                     'data-name="' + repo.name + '" ' +
-                    'data-url="' + repo.clone_url + '" ' +
+                    'data-url="' + cloneUrl + '" ' +
                     'data-desc="' + (repo.description || '').replace(/"/g, '&quot;') + '">' +
                     '<div class="github-repo-name">' + repo.name +
+                    (repo.private ? ' <span class="github-repo-private">Private</span>' : '') +
                     (repo.language ? ' <span class="github-repo-lang">' + repo.language + '</span>' : '') +
                     '</div>' +
                     (repo.description ? '<div class="github-repo-desc">' + repo.description + '</div>' : '') +

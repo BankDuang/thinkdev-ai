@@ -212,6 +212,7 @@ body {
 .github-repo-item.selected { background: var(--bg-hover); border-left: 3px solid var(--accent); }
 .github-repo-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 .github-repo-lang { font-size: 10px; font-weight: 400; color: var(--accent); background: rgba(137,180,250,0.1); padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+.github-repo-private { font-size: 10px; font-weight: 600; color: var(--warning); background: rgba(249,226,175,0.15); padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
 .github-repo-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .modal-body { padding: 16px; }
