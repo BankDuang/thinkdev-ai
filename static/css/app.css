@@ -43,6 +43,7 @@ body {
     border-bottom: 1px solid var(--border);
     user-select: none;
 }
+.header-left { display: flex; align-items: center; gap: 6px; }
 .logo { font-weight: 700; font-size: 14px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
 .logo-img { height: 24px; width: 24px; border-radius: 4px; object-fit: cover; filter: drop-shadow(0 0 4px var(--accent)); }
 .header-center { color: var(--text-secondary); font-size: 12px; }
