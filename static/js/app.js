@@ -73,7 +73,7 @@ function saveFile() {
 
     var formData = new FormData();
     formData.append('path', filePath);
-    formData.append('content', editor.value);
+    formData.append('content', window.cmEditor ? window.cmEditor.getValue() : editor.value);
 
     fetch('/files/' + projectId + '/save', {
         method: 'POST',

@@ -25,4 +25,62 @@
                   onscroll="syncLineNumbers()">{{ content }}</textarea>
     </div>
 </div>
-<script>updateLineNumbers();</script>
+<script>
+(function() {
+    if (typeof CodeMirror === 'undefined') { updateLineNumbers(); return; }
+
+    var ta = document.getElementById('code-editor');
+    if (!ta) return;
+
+    var ext = ta.dataset.filePath.split('.').pop().toLowerCase();
+    var modeMap = {
+        'py': 'python',
+        'js': 'javascript', 'mjs': 'javascript', 'cjs': 'javascript', 'jsx': 'javascript',
+        'ts': 'javascript', 'tsx': 'javascript',
+        'json': 'application/json',
+        'css': 'css', 'scss': 'text/x-scss', 'less': 'text/x-less',
+        'html': 'htmlmixed', 'htm': 'htmlmixed',
+        'xml': 'xml', 'svg': 'xml',
+        'md': 'markdown', 'markdown': 'markdown',
+        'sh': 'shell', 'bash': 'shell', 'zsh': 'shell',
+        'yaml': 'yaml', 'yml': 'yaml',
+        'java': 'text/x-java',
+        'c': 'text/x-csrc', 'h': 'text/x-csrc',
+        'cpp': 'text/x-c++src', 'cc': 'text/x-c++src', 'cxx': 'text/x-c++src', 'hpp': 'text/x-c++src',
+        'cs': 'text/x-csharp',
+        'rs': 'rust',
+        'go': 'go',
+        'sql': 'text/x-sql',
+    };
+
+    // Hide plain-text gutter — CodeMirror provides its own
+    var gutter = document.getElementById('line-numbers');
+    if (gutter) gutter.style.display = 'none';
+
+    window.cmEditor = null;
+    window.cmEditor = CodeMirror.fromTextArea(ta, {
+        mode: modeMap[ext] || null,
+        theme: 'material-darker',
+        lineNumbers: true,
+        indentUnit: 4,
+        tabSize: 4,
+        indentWithTabs: true,
+        lineWrapping: false,
+        styleActiveLine: true,
+        matchBrackets: true,
+        autofocus: true,
+        extraKeys: {
+            'Tab': function(cm) {
+                if (cm.somethingSelected()) { cm.indentSelection('add'); }
+                else { cm.replaceSelection('\t'); }
+            },
+            'Shift-Tab': function(cm) { cm.indentSelection('subtract'); }
+        }
+    });
+
+    window.cmEditor.on('change', markUnsaved);
+
+    // Ensure CM fills the container after layout settles
+    setTimeout(function() { if (window.cmEditor) window.cmEditor.refresh(); }, 50);
+})();
+</script>

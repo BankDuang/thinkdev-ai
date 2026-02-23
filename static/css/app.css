@@ -670,6 +670,28 @@ body {
 }
 
 /* ════════════════════════════════════════
+   CODEMIRROR
+════════════════════════════════════════ */
+.editor-body .CodeMirror {
+    flex: 1;
+    height: 100% !important;
+    min-height: 0;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.editor-body .CodeMirror-scroll { min-height: 0; }
+
+/* Override material-darker background to match app theme */
+.cm-s-material-darker.CodeMirror          { background: #10101e !important; }
+.cm-s-material-darker .CodeMirror-gutters { background: #0d0d1c !important; border-right-color: #1e1e36 !important; }
+.cm-s-material-darker .CodeMirror-linenumber { color: #3e3e5e !important; }
+.cm-s-material-darker .CodeMirror-cursor  { border-left-color: #a5b4fc !important; }
+.cm-s-material-darker .CodeMirror-selected,
+.cm-s-material-darker .CodeMirror-focused .CodeMirror-selected { background: #2a2a46 !important; }
+.cm-s-material-darker .CodeMirror-activeline-background { background: rgba(165,180,252,0.04) !important; }
+
+/* ════════════════════════════════════════
    GIT PANEL
 ════════════════════════════════════════ */
 #git-content { overflow-y: auto; flex: 1; padding: 0; }
