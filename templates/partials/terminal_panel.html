@@ -31,6 +31,8 @@
                 hx-target="#terminal-container"
                 hx-swap="innerHTML">&#10005;</button>
         {% endif %}
+        <button class="btn-icon btn-xs" title="Minimize" onclick="toggleTerminalMinimize()">&#9660;</button>
+        <button class="btn-icon btn-xs" title="Maximize" onclick="toggleTerminalMaximize()">&#9634;</button>
         <button class="btn-icon btn-ai" title="Launch opencode"
                 onclick="launchAICLI('opencode')"
                 {% if not project_id %}disabled{% endif %}>&#9881;</button>

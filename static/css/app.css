@@ -378,6 +378,10 @@ body {
 .terminal-xterm .xterm-viewport { overflow-y: auto !important; }
 .terminal-xterm .xterm-screen { padding: 4px; }
 
+/* ── Terminal Minimize / Maximize ── */
+.panel-bottom.minimized .terminal-output { display: none; }
+.panel-bottom.minimized .resize-handle-v { display: none; }
+
 /* ── Panel Resize Handle ── */
 .resize-handle-h {
     width: 4px;
