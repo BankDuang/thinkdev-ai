@@ -210,7 +210,7 @@ function connectTerminal(sessionId) {
         } else {
             data = evt.data;
         }
-        xterm.write(data);
+        xterm.write(data, function() { xterm.scrollToBottom(); });
     };
 
     terminalWS.onclose = function() {
