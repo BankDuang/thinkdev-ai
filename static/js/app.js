@@ -226,19 +226,6 @@ function connectTerminal(sessionId) {
         if (xterm) xterm.write('\r\n\x1b[31m[Connection error]\x1b[0m\r\n');
     };
 
-    // Intercept Ctrl key combos so browser doesn't steal them
-    xterm.attachCustomKeyEventHandler(function(e) {
-        if (e.ctrlKey && !e.metaKey && !e.altKey && e.type === 'keydown') {
-            var key = e.key.toLowerCase();
-            // Let xterm handle these Ctrl combos (clear, interrupt, etc.)
-            if ('cldzauekw'.indexOf(key) !== -1) {
-                e.preventDefault();
-                return true;
-            }
-        }
-        return true;
-    });
-
     // Send keystrokes from xterm to WS
     xterm.onData(function(data) {
         if (terminalWS && terminalWS.readyState === WebSocket.OPEN) {
@@ -591,5 +578,12 @@ function showToast(message, type) {
     container.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 3000);
 }
+
+// Prevent browser from stealing Ctrl+L when terminal is active
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'l' && xterm && terminalWS) {
+        e.preventDefault();
+    }
+});
 
 console.log("ThinkDev AI loaded");
