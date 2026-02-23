@@ -27,7 +27,7 @@
 </div>
 <script>
 (function() {
-    if (typeof CodeMirror === 'undefined') { updateLineNumbers(); return; }
+    if (typeof CodeMirror === 'undefined') { ta.style.display = 'block'; updateLineNumbers(); return; }
 
     var ta = document.getElementById('code-editor');
     if (!ta) return;

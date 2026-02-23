@@ -651,6 +651,7 @@ body {
 .line-numbers div { height: 1.6em; }
 
 .code-textarea {
+    display: none;
     flex: 1;
     width: 100%;
     padding: 8px 14px;
