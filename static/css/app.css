@@ -131,6 +131,8 @@ body {
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-secondary { background: var(--bg-surface); color: var(--text-primary); }
 .btn-secondary:hover { background: var(--bg-hover); }
+.btn-danger { background: var(--danger); color: var(--bg-primary); }
+.btn-danger:hover { background: #e06c8a; }
 
 /* ── Project List ── */
 #project-list { overflow-y: auto; flex: 1; }
@@ -179,6 +181,9 @@ body {
     font-weight: 600;
     font-size: 14px;
 }
+
+.modal-body { padding: 16px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
 
 /* ── Forms ── */
 .form-group { padding: 8px 16px; }

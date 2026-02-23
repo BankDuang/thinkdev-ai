@@ -90,50 +90,105 @@ function saveFile() {
     });
 }
 
+// Custom app prompt modal (replaces browser prompt/confirm)
+function showAppPrompt(title, placeholder, defaultValue, callback) {
+    var container = document.getElementById('modal-container');
+    if (!container) return;
+    container.innerHTML = '<div class="modal-overlay" onclick="closeAppPrompt()">' +
+        '<div class="modal" onclick="event.stopPropagation()">' +
+        '<div class="modal-header"><span>' + title + '</span>' +
+        '<button class="btn-icon" onclick="closeAppPrompt()">&times;</button></div>' +
+        '<div class="modal-body">' +
+        '<input type="text" id="app-prompt-input" class="form-input" ' +
+        'placeholder="' + (placeholder || '') + '" ' +
+        'value="' + (defaultValue || '') + '" ' +
+        'onkeydown="if(event.key===\'Enter\')submitAppPrompt()">' +
+        '</div>' +
+        '<div class="modal-footer">' +
+        '<button class="btn" onclick="closeAppPrompt()">Cancel</button>' +
+        '<button class="btn btn-primary" onclick="submitAppPrompt()">OK</button>' +
+        '</div></div></div>';
+    window._appPromptCallback = callback;
+    setTimeout(function() {
+        var input = document.getElementById('app-prompt-input');
+        if (input) { input.focus(); input.select(); }
+    }, 50);
+}
+
+function showAppConfirm(title, message, callback) {
+    var container = document.getElementById('modal-container');
+    if (!container) return;
+    container.innerHTML = '<div class="modal-overlay" onclick="closeAppPrompt()">' +
+        '<div class="modal" onclick="event.stopPropagation()">' +
+        '<div class="modal-header"><span>' + title + '</span>' +
+        '<button class="btn-icon" onclick="closeAppPrompt()">&times;</button></div>' +
+        '<div class="modal-body"><p style="margin:0;color:var(--text-secondary)">' + message + '</p></div>' +
+        '<div class="modal-footer">' +
+        '<button class="btn" onclick="closeAppPrompt()">Cancel</button>' +
+        '<button class="btn btn-danger" onclick="window._appPromptCallback&&window._appPromptCallback();closeAppPrompt()">Delete</button>' +
+        '</div></div></div>';
+    window._appPromptCallback = callback;
+}
+
+function submitAppPrompt() {
+    var input = document.getElementById('app-prompt-input');
+    var val = input ? input.value.trim() : '';
+    if (val && window._appPromptCallback) window._appPromptCallback(val);
+    closeAppPrompt();
+}
+
+function closeAppPrompt() {
+    var container = document.getElementById('modal-container');
+    if (container) container.innerHTML = '';
+    window._appPromptCallback = null;
+}
+
 // File tree: create file
 function promptCreateFile(projectId, parentPath) {
-    var name = prompt('File name:');
-    if (!name) return;
-    var fullPath = parentPath ? parentPath + name : name;
-    var formData = new FormData();
-    formData.append('path', fullPath);
-    formData.append('is_directory', 'false');
-    fetch('/files/' + projectId + '/create', { method: 'POST', body: formData })
-        .then(function(r) { return r.text(); })
-        .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    showAppPrompt('New File', 'filename.ext', '', function(name) {
+        var fullPath = parentPath ? parentPath + name : name;
+        var formData = new FormData();
+        formData.append('path', fullPath);
+        formData.append('is_directory', 'false');
+        fetch('/files/' + projectId + '/create', { method: 'POST', body: formData })
+            .then(function(r) { return r.text(); })
+            .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    });
 }
 
 // File tree: create folder
 function promptCreateFolder(projectId, parentPath) {
-    var name = prompt('Folder name:');
-    if (!name) return;
-    var fullPath = parentPath ? parentPath + name : name;
-    var formData = new FormData();
-    formData.append('path', fullPath);
-    formData.append('is_directory', 'true');
-    fetch('/files/' + projectId + '/create', { method: 'POST', body: formData })
-        .then(function(r) { return r.text(); })
-        .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    showAppPrompt('New Folder', 'folder-name', '', function(name) {
+        var fullPath = parentPath ? parentPath + name : name;
+        var formData = new FormData();
+        formData.append('path', fullPath);
+        formData.append('is_directory', 'true');
+        fetch('/files/' + projectId + '/create', { method: 'POST', body: formData })
+            .then(function(r) { return r.text(); })
+            .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    });
 }
 
 // File tree: rename
 function promptRename(projectId, oldPath) {
-    var newName = prompt('New name:', oldPath);
-    if (!newName || newName === oldPath) return;
-    var formData = new FormData();
-    formData.append('old_path', oldPath);
-    formData.append('new_path', newName);
-    fetch('/files/' + projectId + '/rename', { method: 'POST', body: formData })
-        .then(function(r) { return r.text(); })
-        .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    showAppPrompt('Rename', 'new-name', oldPath, function(newName) {
+        if (newName === oldPath) return;
+        var formData = new FormData();
+        formData.append('old_path', oldPath);
+        formData.append('new_path', newName);
+        fetch('/files/' + projectId + '/rename', { method: 'POST', body: formData })
+            .then(function(r) { return r.text(); })
+            .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    });
 }
 
 // File tree: delete
 function confirmDelete(projectId, path) {
-    if (!confirm('Delete "' + path + '"?')) return;
-    fetch('/files/' + projectId + '/delete?path=' + encodeURIComponent(path), { method: 'DELETE' })
-        .then(function(r) { return r.text(); })
-        .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    showAppConfirm('Delete', 'Delete "' + path + '"?', function() {
+        fetch('/files/' + projectId + '/delete?path=' + encodeURIComponent(path), { method: 'DELETE' })
+            .then(function(r) { return r.text(); })
+            .then(function(html) { var el = document.getElementById('file-tree'); el.innerHTML = html; htmx.process(el); });
+    });
 }
 
 // Highlight active file in tree
