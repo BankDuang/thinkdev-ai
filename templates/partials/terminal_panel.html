@@ -43,32 +43,11 @@
     </div>
 </div>
 
-<!-- Terminal output area -->
+<!-- Terminal output area (xterm.js) -->
 <div class="terminal-output" id="terminal-output">
     {% if sessions and active_session_id %}
-        <div class="terminal-screen" id="terminal-screen"></div>
+        <div id="terminal-xterm" class="terminal-xterm"></div>
     {% else %}
         <div class="empty-state">Open a terminal to get started</div>
     {% endif %}
 </div>
-
-{% if sessions and active_session_id %}
-<div class="terminal-input-bar">
-    <input type="text" id="terminal-input" class="terminal-input"
-           placeholder="Type command and press Enter..."
-           onkeydown="handleTerminalInput(event)"
-           autocomplete="off" spellcheck="false">
-</div>
-{% endif %}
-
-<script>
-    {% if active_session_id %}
-    // Auto-connect to active terminal session
-    (function() {
-        if (window._terminalAutoConnect) clearTimeout(window._terminalAutoConnect);
-        window._terminalAutoConnect = setTimeout(function() {
-            connectTerminal('{{ active_session_id }}');
-        }, 100);
-    })();
-    {% endif %}
-</script>

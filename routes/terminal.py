@@ -190,13 +190,24 @@ async def terminal_websocket(websocket: WebSocket, session_id: str):
             pass
 
     async def write_pty():
+        import json
         try:
             while True:
                 msg = await websocket.receive()
                 if msg.get("type") == "websocket.disconnect":
                     break
                 if "text" in msg:
-                    manager.write_to_session(session_id, msg["text"].encode("utf-8"))
+                    text = msg["text"]
+                    # Check for JSON resize message from xterm.js
+                    if text.startswith('{'):
+                        try:
+                            data = json.loads(text)
+                            if data.get("type") == "resize":
+                                manager.resize_session(session_id, data.get("cols", 80), data.get("rows", 24))
+                                continue
+                        except (json.JSONDecodeError, ValueError):
+                            pass
+                    manager.write_to_session(session_id, text.encode("utf-8"))
                 elif "bytes" in msg:
                     manager.write_to_session(session_id, msg["bytes"])
         except (WebSocketDisconnect, Exception):

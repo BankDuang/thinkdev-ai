@@ -130,11 +130,13 @@ document.addEventListener('htmx:afterSwap', function(evt) {
 });
 
 // ═══════════════════════════════════════
-// Terminal WebSocket Client
+// Terminal — xterm.js + WebSocket
 // ═══════════════════════════════════════
 
 var terminalWS = null;
 var activeTerminalId = null;
+var xterm = null;
+var xtermFitAddon = null;
 
 function getWSUrl(sessionId) {
     var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -142,45 +144,77 @@ function getWSUrl(sessionId) {
 }
 
 function connectTerminal(sessionId) {
-    // Disconnect existing
     disconnectTerminal();
-
     activeTerminalId = sessionId;
-    var screen = document.getElementById('terminal-screen');
-    if (!screen) return;
-    screen.textContent = '';
 
+    var container = document.getElementById('terminal-xterm');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // Create xterm.js instance
+    xterm = new Terminal({
+        cursorBlink: true,
+        cursorStyle: 'bar',
+        fontSize: 13,
+        fontFamily: "'SF Mono', 'Fira Code', 'Consolas', 'Menlo', monospace",
+        lineHeight: 1.2,
+        scrollback: 5000,
+        theme: {
+            background: '#11111b',
+            foreground: '#cdd6f4',
+            cursor: '#f5e0dc',
+            selectionBackground: '#585b70',
+            black: '#45475a',
+            red: '#f38ba8',
+            green: '#a6e3a1',
+            yellow: '#f9e2af',
+            blue: '#89b4fa',
+            magenta: '#f5c2e7',
+            cyan: '#94e2d5',
+            white: '#bac2de',
+            brightBlack: '#585b70',
+            brightRed: '#f38ba8',
+            brightGreen: '#a6e3a1',
+            brightYellow: '#f9e2af',
+            brightBlue: '#89b4fa',
+            brightMagenta: '#f5c2e7',
+            brightCyan: '#94e2d5',
+            brightWhite: '#a6adc8'
+        }
+    });
+
+    xtermFitAddon = new FitAddon.FitAddon();
+    xterm.loadAddon(xtermFitAddon);
+    xterm.open(container);
+
+    // Fit to container size
+    try { xtermFitAddon.fit(); } catch(e) {}
+
+    // Connect WebSocket
     var url = getWSUrl(sessionId);
     terminalWS = new WebSocket(url);
-
     terminalWS.binaryType = 'arraybuffer';
 
     terminalWS.onopen = function() {
-        // Focus input
-        var input = document.getElementById('terminal-input');
-        if (input) input.focus();
+        xterm.focus();
+        // Send terminal size to server
+        sendTerminalResize();
     };
 
     terminalWS.onmessage = function(evt) {
-        var screen = document.getElementById('terminal-screen');
-        if (!screen) return;
-        var text;
+        if (!xterm) return;
+        var data;
         if (evt.data instanceof ArrayBuffer) {
-            text = new TextDecoder().decode(evt.data);
+            data = new TextDecoder().decode(evt.data);
         } else {
-            text = evt.data;
+            data = evt.data;
         }
-        // Strip some problematic ANSI sequences but keep basic ones
-        screen.textContent += text;
-        // Auto-scroll
-        var output = document.getElementById('terminal-output');
-        if (output) output.scrollTop = output.scrollHeight;
+        xterm.write(data);
     };
 
     terminalWS.onclose = function() {
-        var screen = document.getElementById('terminal-screen');
-        if (screen && activeTerminalId === sessionId) {
-            screen.textContent += '\r\n[Disconnected]\r\n';
+        if (xterm && activeTerminalId === sessionId) {
+            xterm.write('\r\n\x1b[90m[Disconnected]\x1b[0m\r\n');
         }
         if (activeTerminalId === sessionId) {
             terminalWS = null;
@@ -188,12 +222,51 @@ function connectTerminal(sessionId) {
     };
 
     terminalWS.onerror = function() {
-        var screen = document.getElementById('terminal-screen');
-        if (screen) screen.textContent += '\r\n[Connection error]\r\n';
+        if (xterm) xterm.write('\r\n\x1b[31m[Connection error]\x1b[0m\r\n');
     };
+
+    // Send keystrokes from xterm to WS
+    xterm.onData(function(data) {
+        if (terminalWS && terminalWS.readyState === WebSocket.OPEN) {
+            terminalWS.send(data);
+        }
+    });
+
+    // Handle resize
+    xterm.onResize(function(size) {
+        sendTerminalResize();
+    });
+
+    // Observe container resize
+    if (window._xtermResizeObserver) window._xtermResizeObserver.disconnect();
+    window._xtermResizeObserver = new ResizeObserver(function() {
+        if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
+    });
+    window._xtermResizeObserver.observe(container);
+}
+
+function sendTerminalResize() {
+    if (!xterm || !terminalWS || terminalWS.readyState !== WebSocket.OPEN) return;
+    // Send resize as a special message (JSON)
+    try {
+        terminalWS.send(JSON.stringify({
+            type: 'resize',
+            cols: xterm.cols,
+            rows: xterm.rows
+        }));
+    } catch(e) {}
 }
 
 function disconnectTerminal() {
+    if (window._xtermResizeObserver) {
+        window._xtermResizeObserver.disconnect();
+        window._xtermResizeObserver = null;
+    }
+    if (xterm) {
+        xterm.dispose();
+        xterm = null;
+        xtermFitAddon = null;
+    }
     if (terminalWS) {
         try { terminalWS.close(); } catch(e) {}
         terminalWS = null;
@@ -201,7 +274,6 @@ function disconnectTerminal() {
 }
 
 function autoConnectActiveTerminal() {
-    // Find the active terminal tab in the DOM and connect its WS
     setTimeout(function() {
         var activeTab = document.querySelector('.terminal-tab.active');
         if (activeTab && activeTab.dataset.sessionId) {
@@ -210,56 +282,8 @@ function autoConnectActiveTerminal() {
     }, 150);
 }
 
-function handleTerminalInput(event) {
-    var input = document.getElementById('terminal-input');
-    if (!input) return;
-
-    // Ctrl+key combos — send control characters
-    if (event.ctrlKey && !event.metaKey && !event.altKey) {
-        var ctrlMap = {
-            'c': '\x03', 'd': '\x04', 'z': '\x1a', 'l': '\x0c',
-            'a': '\x01', 'e': '\x05', 'u': '\x15', 'k': '\x0b',
-            'w': '\x17', 'r': '\x12'
-        };
-        var ch = ctrlMap[event.key.toLowerCase()];
-        if (ch) {
-            event.preventDefault();
-            sendToTerminal(ch);
-            return;
-        }
-    }
-
-    // Arrow keys
-    var arrowMap = {
-        'ArrowUp': '\x1b[A', 'ArrowDown': '\x1b[B',
-        'ArrowRight': '\x1b[C', 'ArrowLeft': '\x1b[D'
-    };
-    if (arrowMap[event.key]) {
-        event.preventDefault();
-        sendToTerminal(arrowMap[event.key]);
-        return;
-    }
-
-    // Enter — send command
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        var cmd = input.value + '\n';
-        sendToTerminal(cmd);
-        input.value = '';
-    }
-
-    // Tab — send tab character
-    if (event.key === 'Tab') {
-        event.preventDefault();
-        sendToTerminal('\t');
-    }
-}
-
 function sendToTerminal(data) {
-    if (!terminalWS || terminalWS.readyState !== WebSocket.OPEN) {
-        console.warn('Terminal WS not connected, state:', terminalWS ? terminalWS.readyState : 'null');
-        return;
-    }
+    if (!terminalWS || terminalWS.readyState !== WebSocket.OPEN) return;
     terminalWS.send(data);
 }
 
@@ -301,8 +325,7 @@ function closeTerminalTab(sessionId) {
 
 function clearTerminal(sessionId) {
     fetch('/terminal/' + sessionId + '/clear', { method: 'POST' });
-    var screen = document.getElementById('terminal-screen');
-    if (screen) screen.textContent = '';
+    if (xterm) xterm.clear();
 }
 
 // ═══════════════════════════════════════
