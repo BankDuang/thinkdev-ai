@@ -1,5 +1,6 @@
+import httpx
 from fastapi import APIRouter, Depends, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -127,3 +128,38 @@ async def activate_project(
         "request": request,
         "project": project,
     })
+
+
+@router.get("/github/repos", response_class=JSONResponse)
+async def github_repos(username: str):
+    """Fetch public repos for a GitHub username."""
+    if not username.strip():
+        return JSONResponse({"repos": [], "error": "Username required"})
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"https://api.github.com/users/{username.strip()}/repos",
+                params={"per_page": 100, "sort": "updated", "direction": "desc"},
+                headers={"Accept": "application/vnd.github.v3+json"},
+            )
+            if resp.status_code == 404:
+                return JSONResponse({"repos": [], "error": "User not found"})
+            resp.raise_for_status()
+            repos = [
+                {
+                    "name": r["name"],
+                    "full_name": r["full_name"],
+                    "clone_url": r["clone_url"],
+                    "description": r["description"] or "",
+                    "language": r["language"] or "",
+                    "updated_at": r["updated_at"],
+                    "private": r["private"],
+                }
+                for r in resp.json()
+                if not r["private"]
+            ]
+            return JSONResponse({"repos": repos})
+    except httpx.HTTPStatusError as e:
+        return JSONResponse({"repos": [], "error": f"GitHub API error: {e.response.status_code}"})
+    except Exception as e:
+        return JSONResponse({"repos": [], "error": str(e)})

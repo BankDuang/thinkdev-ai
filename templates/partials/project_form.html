@@ -1,5 +1,5 @@
 <div class="modal-overlay" onclick="if(event.target===this) this.remove()">
-    <div class="modal">
+    <div class="modal" style="width:520px">
         <div class="modal-header">
             <span>{% if mode == 'edit' %}Edit Project{% else %}New Project{% endif %}</span>
             <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">&#10005;</button>
@@ -7,6 +7,27 @@
 
         {% if error %}
         <div class="form-error">{{ error }}</div>
+        {% endif %}
+
+        {% if mode != 'edit' %}
+        <!-- Tabs: Empty / GitHub -->
+        <div class="form-tabs">
+            <button class="form-tab active" onclick="switchProjectTab('empty', this)">Empty Project</button>
+            <button class="form-tab" onclick="switchProjectTab('github', this)">Clone from GitHub</button>
+        </div>
+
+        <!-- GitHub search section (hidden by default) -->
+        <div id="github-search-section" style="display:none">
+            <div class="form-group">
+                <label>GitHub Username</label>
+                <div style="display:flex;gap:6px">
+                    <input type="text" id="github-username" placeholder="e.g. BankDuang"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();fetchGitHubRepos();}">
+                    <button type="button" class="btn btn-primary" onclick="fetchGitHubRepos()" style="flex-shrink:0">Search</button>
+                </div>
+            </div>
+            <div id="github-repo-list" class="github-repo-list"></div>
+        </div>
         {% endif %}
 
         <form {% if mode == 'edit' %}
@@ -31,7 +52,7 @@
                           placeholder="Optional description">{{ project.description if project else '' }}</textarea>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="git-url-group">
                 <label for="git_repository_url">Git Repository URL</label>
                 <input type="text" id="git_repository_url" name="git_repository_url"
                        placeholder="https://github.com/user/repo.git (optional)"
@@ -49,3 +70,55 @@
         </form>
     </div>
 </div>
+
+<script>
+function switchProjectTab(tab, btn) {
+    document.querySelectorAll('.form-tab').forEach(function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    var ghSection = document.getElementById('github-search-section');
+    if (ghSection) ghSection.style.display = tab === 'github' ? '' : 'none';
+}
+
+function fetchGitHubRepos() {
+    var username = document.getElementById('github-username').value.trim();
+    if (!username) return;
+    var list = document.getElementById('github-repo-list');
+    list.innerHTML = '<div class="empty-state" style="padding:12px">Loading repos...</div>';
+    fetch('/projects/github/repos?username=' + encodeURIComponent(username))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) {
+                list.innerHTML = '<div class="form-error">' + data.error + '</div>';
+                return;
+            }
+            if (!data.repos.length) {
+                list.innerHTML = '<div class="empty-state" style="padding:12px">No public repos found</div>';
+                return;
+            }
+            var html = '';
+            data.repos.forEach(function(repo) {
+                html += '<div class="github-repo-item" onclick="selectGitHubRepo(this)" ' +
+                    'data-name="' + repo.name + '" ' +
+                    'data-url="' + repo.clone_url + '" ' +
+                    'data-desc="' + (repo.description || '').replace(/"/g, '&quot;') + '">' +
+                    '<div class="github-repo-name">' + repo.name +
+                    (repo.language ? ' <span class="github-repo-lang">' + repo.language + '</span>' : '') +
+                    '</div>' +
+                    (repo.description ? '<div class="github-repo-desc">' + repo.description + '</div>' : '') +
+                    '</div>';
+            });
+            list.innerHTML = html;
+        })
+        .catch(function(e) {
+            list.innerHTML = '<div class="form-error">Failed to fetch repos</div>';
+        });
+}
+
+function selectGitHubRepo(el) {
+    document.querySelectorAll('.github-repo-item').forEach(function(r) { r.classList.remove('selected'); });
+    el.classList.add('selected');
+    document.getElementById('name').value = el.dataset.name;
+    document.getElementById('git_repository_url').value = el.dataset.url;
+    if (el.dataset.desc) document.getElementById('description').value = el.dataset.desc;
+}
+</script>

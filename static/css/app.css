@@ -182,6 +182,38 @@ body {
     font-size: 14px;
 }
 
+/* ── Form Tabs ── */
+.form-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.form-tab {
+    flex: 1;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.form-tab:hover { color: var(--text-primary); }
+.form-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── GitHub Repo List ── */
+.github-repo-list { max-height: 200px; overflow-y: auto; border-bottom: 1px solid var(--border); }
+.github-repo-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+.github-repo-item:last-child { border-bottom: none; }
+.github-repo-item:hover { background: var(--bg-hover); }
+.github-repo-item.selected { background: var(--bg-hover); border-left: 3px solid var(--accent); }
+.github-repo-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.github-repo-lang { font-size: 10px; font-weight: 400; color: var(--accent); background: rgba(137,180,250,0.1); padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+.github-repo-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .modal-body { padding: 16px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
 
