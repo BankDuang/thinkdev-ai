@@ -57,8 +57,38 @@ class TerminalSessionManager:
             os.chdir(str(workspace))
             env = os.environ.copy()
             env["TERM"] = "xterm-256color"
+            env["COLORTERM"] = "truecolor"
             env["HOME"] = os.path.expanduser("~")
-            os.execvpe(TERMINAL_SHELL, [TERMINAL_SHELL, "--login"], env)
+            env["CLICOLOR"] = "1"
+            env["CLICOLOR_FORCE"] = "1"
+            env["LSCOLORS"] = "GxFxCxDxBxegedabagaced"
+            env["FORCE_COLOR"] = "1"
+
+            # Create a custom zshrc that sources user's config then sets colored prompt
+            import tempfile
+            zdotdir = tempfile.mkdtemp(prefix="thinkdev-zsh-")
+            home = os.path.expanduser("~")
+            with open(os.path.join(zdotdir, ".zshrc"), "w") as f:
+                f.write(f'[ -f "{home}/.zshrc" ] && source "{home}/.zshrc"\n')
+                f.write('export PROMPT="%F{green}%n@%m%f %F{blue}%1~%f %# "\n')
+                f.write('export CLICOLOR=1\n')
+            with open(os.path.join(zdotdir, ".zshenv"), "w") as f:
+                f.write(f'[ -f "{home}/.zshenv" ] && source "{home}/.zshenv"\n')
+
+            shell_name = os.path.basename(TERMINAL_SHELL)
+            if shell_name == "zsh":
+                env["ZDOTDIR"] = zdotdir
+                os.execvpe(TERMINAL_SHELL, [TERMINAL_SHELL], env)
+            else:
+                # Bash: use --rcfile with colored PS1
+                import getpass, socket
+                user = getpass.getuser()
+                host = socket.gethostname().split(".")[0]
+                bashrc = os.path.join(zdotdir, ".bashrc")
+                with open(bashrc, "w") as f:
+                    f.write(f'[ -f "{home}/.bashrc" ] && source "{home}/.bashrc"\n')
+                    f.write(f'export PS1="\\[\\033[01;32m\\]{user}@{host}\\[\\033[00m\\] \\[\\033[01;34m\\]\\W\\[\\033[00m\\] \\$ "\n')
+                os.execvpe(TERMINAL_SHELL, [TERMINAL_SHELL, "--rcfile", bashrc], env)
         else:
             # Parent process
             os.close(fd)

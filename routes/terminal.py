@@ -203,7 +203,7 @@ async def terminal_websocket(websocket: WebSocket, session_id: str):
                         try:
                             data = json.loads(text)
                             if data.get("type") == "resize":
-                                manager.resize_session(session_id, data.get("cols", 80), data.get("rows", 24))
+                                manager.resize_session(session_id, data.get("rows", 24), data.get("cols", 80))
                                 continue
                         except (json.JSONDecodeError, ValueError):
                             pass
