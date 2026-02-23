@@ -158,7 +158,8 @@ function connectTerminal(sessionId) {
         fontSize: 13,
         fontFamily: "'SF Mono', 'Fira Code', 'Consolas', 'Menlo', monospace",
         lineHeight: 1.2,
-        scrollback: 5000,
+        scrollback: 10000,
+        scrollOnUserInput: true,
         theme: {
             background: '#11111b',
             foreground: '#cdd6f4',
