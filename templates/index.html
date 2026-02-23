@@ -11,7 +11,8 @@
             <button class="btn-icon" title="New Project"
                     hx-get="/projects/create-form"
                     hx-target="#modal-container"
-                    hx-swap="innerHTML">+</button>
+                    hx-swap="innerHTML"
+                    style="font-size:16px;font-weight:300;color:var(--accent)">+</button>
         </div>
         <div id="project-list">
             {% include "partials/project_list.html" %}
@@ -20,7 +21,7 @@
 
     <div class="panel-section" id="file-tree-panel">
         <div class="panel-header">
-            <span>Files</span>
+            <span>Explorer</span>
         </div>
         <div id="file-tree">
             <div class="empty-state">Select a project</div>
@@ -48,7 +49,7 @@
 <aside class="panel-right">
     <div class="panel-section" id="git-panel">
         <div class="panel-header">
-            <span>Git</span>
+            <span>Source Control</span>
             <span style="flex:1"></span>
             <button class="btn-icon btn-xs" title="Collapse Right Panel" onclick="toggleRightPanel()">&#9654;</button>
         </div>
@@ -80,7 +81,8 @@
             <button class="btn-icon btn-xs" title="Minimize" onclick="toggleTerminalMinimize()">&#9660;</button>
             <button class="btn-icon btn-xs" title="Maximize" onclick="toggleTerminalMaximize()">&#9634;</button>
             <button class="btn-icon" title="New Terminal" id="btn-new-terminal"
-                    onclick="createTerminal()" disabled>+</button>
+                    onclick="createTerminal()" disabled
+                    style="font-size:16px;font-weight:300;color:var(--accent)">+</button>
         </div>
     </div>
     <div class="terminal-output" id="terminal-output">

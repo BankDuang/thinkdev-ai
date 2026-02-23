@@ -7,6 +7,9 @@
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
     <link rel="icon" type="image/png" sizes="192x192" href="/static/images/favicon-192.png">
     <link rel="apple-touch-icon" href="/static/images/favicon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap">
     <link rel="stylesheet" href="/static/css/app.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
     <script src="https://unpkg.com/htmx.org@2.0.2"></script>
@@ -17,7 +20,10 @@
     <header class="app-header">
         <div class="header-left">
             <button class="btn-icon btn-xs" title="Toggle Left Panel" onclick="toggleLeftPanel()">&#9776;</button>
-            <span class="logo"><img src="/static/images/logo.png" alt="ThinkDev AI" class="logo-img"> ThinkDev AI</span>
+            <span class="logo">
+                <img src="/static/images/logo.png" alt="ThinkDev AI" class="logo-img">
+                ThinkDev AI
+            </span>
         </div>
         <div class="header-center" id="active-project-name">
             {% if active_project %}
@@ -27,8 +33,9 @@
             {% endif %}
         </div>
         <div class="header-right">
-            <span class="status-dot"></span> Ready
-            <button class="btn-icon btn-xs" title="Toggle Right Panel" onclick="toggleRightPanel()" style="margin-left:6px">&#9776;</button>
+            <span class="status-dot"></span>
+            <span>Ready</span>
+            <button class="btn-icon btn-xs" title="Toggle Right Panel" onclick="toggleRightPanel()" style="margin-left:4px">&#9776;</button>
         </div>
     </header>
 
