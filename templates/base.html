@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkDev AI</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+</head>
+<body hx-headers='{"X-Requested-With": "XMLHttpRequest"}'>
+    <header class="app-header">
+        <div class="header-left">
+            <span class="logo">&#9672; ThinkDev AI</span>
+        </div>
+        <div class="header-center" id="active-project-name">
+            {% if active_project %}
+                {{ active_project.name }}
+            {% else %}
+                No project selected
+            {% endif %}
+        </div>
+        <div class="header-right">
+            <span class="status-dot"></span> Ready
+        </div>
+    </header>
+
+    <main class="app-layout">
+        {% block content %}{% endblock %}
+    </main>
+
+    <div id="modal-container"></div>
+    <div id="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

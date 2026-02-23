@@ -1,0 +1,5 @@
+{% if saved %}
+<span class="status-saved">&#10003; {{ message if message else 'Saved' }}</span>
+{% else %}
+<span class="status-unsaved">&#9679; {{ message if message else 'Unsaved' }}</span>
+{% endif %}

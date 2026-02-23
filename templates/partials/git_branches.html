@@ -1,0 +1,42 @@
+<div class="git-branches-view">
+    <div class="git-section-header">
+        <span>Branches</span>
+        <button class="btn-icon btn-xs" title="Back to status"
+                hx-get="/git/{{ project_id }}/status"
+                hx-target="#git-content"
+                hx-swap="innerHTML">&#8592;</button>
+    </div>
+
+    <!-- Create branch -->
+    <form class="git-branch-create-form"
+          hx-post="/git/{{ project_id }}/branch/create"
+          hx-target="#git-content"
+          hx-swap="innerHTML">
+        <input type="text" name="name" placeholder="New branch name..." class="git-input" required>
+        <button type="submit" class="btn btn-primary btn-sm">Create</button>
+    </form>
+
+    <!-- Branch list -->
+    <div class="git-branch-list">
+        {% for branch in branches %}
+        <div class="git-branch-item {% if branch == current %}active{% endif %}">
+            <span class="git-branch-label">
+                {% if branch == current %}&#9679;{% endif %}
+                {{ branch }}
+            </span>
+            {% if branch != current %}
+            <form style="display:inline"
+                  hx-post="/git/{{ project_id }}/branch/switch"
+                  hx-target="#git-content"
+                  hx-swap="innerHTML">
+                <input type="hidden" name="name" value="{{ branch }}">
+                <button type="submit" class="btn btn-secondary btn-xs">Switch</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% if not branches %}
+        <div class="empty-state">No branches yet</div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,38 @@
+{% if projects %}
+    {% for project in projects %}
+    <div class="project-item {% if active_project and active_project.id == project.id %}active{% endif %}"
+         id="project-{{ project.id }}">
+        <div class="project-info"
+             hx-get="/projects/{{ project.id }}/activate"
+             hx-target="#active-project-name"
+             hx-swap="innerHTML"
+             hx-indicator="#project-loading-{{ project.id }}"
+             title="{{ project.description or project.name }}">
+            <span class="project-name">{{ project.name }}</span>
+            <span class="htmx-indicator spinner" id="project-loading-{{ project.id }}"></span>
+            {% if project.git_repository_url %}
+                <span class="project-badge git-badge" title="Git">G</span>
+            {% endif %}
+        </div>
+        <div class="project-actions">
+            <button class="btn-icon btn-sm" title="Edit"
+                    hx-get="/projects/{{ project.id }}/edit-form"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML">&#9998;</button>
+            <button class="btn-icon btn-sm btn-danger" title="Delete"
+                    hx-delete="/projects/{{ project.id }}/delete"
+                    hx-target="#project-list"
+                    hx-swap="innerHTML"
+                    hx-confirm="Delete project '{{ project.name }}'? This will remove all files.">&#10005;</button>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">No projects yet</div>
+{% endif %}
+
+{% if toast %}
+<div id="toast-msg" hx-swap-oob="innerHTML:#toast-container">
+    <div class="toast">{{ toast }}</div>
+</div>
+{% endif %}

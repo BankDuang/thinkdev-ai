@@ -1,0 +1,93 @@
+{% if error %}
+<div class="git-error">{{ error }}</div>
+{% endif %}
+
+{% if not status.is_repo %}
+<!-- Not a git repo — show init/clone options -->
+<div class="git-init-section">
+    <div class="empty-state">Not a git repository</div>
+    <div class="git-actions-row">
+        <button class="btn btn-primary btn-sm"
+                hx-post="/git/{{ project_id }}/init"
+                hx-target="#git-content"
+                hx-swap="innerHTML"
+                hx-indicator="closest .git-init-section">Init Repo</button>
+    </div>
+    <form class="git-clone-form"
+          hx-post="/git/{{ project_id }}/clone"
+          hx-target="#git-content"
+          hx-swap="innerHTML">
+        <input type="text" name="url" placeholder="https://github.com/..." class="git-input">
+        <button type="submit" class="btn btn-secondary btn-sm">Clone</button>
+        <span class="htmx-indicator spinner"></span>
+    </form>
+</div>
+{% else %}
+<!-- Git repo active -->
+<div class="git-branch-bar">
+    <span class="git-branch-icon">&#9741;</span>
+    <span class="git-branch-name">{{ status.branch }}</span>
+    <button class="btn-icon btn-xs" title="Refresh"
+            hx-get="/git/{{ project_id }}/status"
+            hx-target="#git-content"
+            hx-swap="innerHTML"
+            hx-indicator="closest .git-branch-bar">&#8635;</button>
+    <span class="htmx-indicator spinner"></span>
+</div>
+
+<!-- Changed files -->
+<div class="git-files-section">
+    {% if status.files %}
+    <div class="git-files-header">Changes ({{ status.files|length }})</div>
+    <div class="git-files-list">
+        {% for f in status.files %}
+        <div class="git-file-item">
+            <span class="git-file-status git-status-{{ f.status[0]|lower }}">{{ f.status }}</span>
+            <span class="git-file-path">{{ f.path }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="git-files-header">Working tree clean</div>
+    {% endif %}
+</div>
+
+<!-- Commit -->
+{% if status.files %}
+<form class="git-commit-form"
+      hx-post="/git/{{ project_id }}/commit"
+      hx-target="#git-content"
+      hx-swap="innerHTML">
+    <input type="text" name="message" placeholder="Commit message..." class="git-input" required>
+    <button type="submit" class="btn btn-primary btn-sm">Commit</button>
+    <span class="htmx-indicator spinner"></span>
+</form>
+{% endif %}
+
+<!-- Actions -->
+<div class="git-actions-row">
+    <button class="btn btn-secondary btn-sm"
+            hx-post="/git/{{ project_id }}/pull"
+            hx-target="#git-content"
+            hx-swap="innerHTML"
+            hx-indicator="closest .git-actions-row">Pull</button>
+    <button class="btn btn-secondary btn-sm"
+            hx-post="/git/{{ project_id }}/fetch"
+            hx-target="#git-content"
+            hx-swap="innerHTML">Fetch</button>
+    <button class="btn btn-secondary btn-sm"
+            hx-get="/git/{{ project_id }}/branches"
+            hx-target="#git-content"
+            hx-swap="innerHTML">Branches</button>
+    <button class="btn btn-secondary btn-sm"
+            hx-get="/git/{{ project_id }}/log"
+            hx-target="#git-content"
+            hx-swap="innerHTML">History</button>
+</div>
+{% endif %}
+
+{% if toast %}
+<div id="toast-msg" hx-swap-oob="innerHTML:#toast-container">
+    <div class="toast">{{ toast }}</div>
+</div>
+{% endif %}

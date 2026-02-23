@@ -1,0 +1,39 @@
+{{ project.name }}
+
+<script>
+    (function() {
+        var pid = '{{ project.id }}';
+        // Highlight active project
+        document.querySelectorAll('.project-item').forEach(function(el) { el.classList.remove('active'); });
+        var item = document.getElementById('project-' + pid);
+        if (item) item.classList.add('active');
+        window.activeProjectId = pid;
+
+        // Disconnect any existing terminal WS
+        if (typeof disconnectTerminal === 'function') disconnectTerminal();
+
+        // Reset editor
+        var ea = document.getElementById('editor-area');
+        if (ea) ea.innerHTML = '<div class="empty-state center-empty"><div class="empty-icon">&#9998;</div><div>Select a file to edit</div></div>';
+
+        // Helper: fetch HTML into element + process htmx
+        function loadInto(url, elId) {
+            fetch(url).then(function(r) { return r.text(); }).then(function(html) {
+                var el = document.getElementById(elId);
+                if (el) { el.innerHTML = html; if (window.htmx) htmx.process(el); }
+            });
+        }
+
+        // Load file tree
+        loadInto('/files/' + pid + '/tree', 'file-tree');
+        // Load git status
+        loadInto('/git/' + pid + '/status', 'git-content');
+        // Load terminal sessions
+        loadInto('/terminal/sessions/' + pid, 'terminal-container');
+
+        // Update session manager after terminal loads
+        setTimeout(function() {
+            if (typeof refreshSessionManager === 'function') refreshSessionManager();
+        }, 300);
+    })();
+</script>

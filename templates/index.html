@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Left Panel -->
+<aside class="panel-left">
+    <div class="panel-section" id="projects-panel">
+        <div class="panel-header">
+            <span>Projects</span>
+            <button class="btn-icon" title="New Project"
+                    hx-get="/projects/create-form"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML">+</button>
+        </div>
+        <div id="project-list">
+            {% include "partials/project_list.html" %}
+        </div>
+    </div>
+
+    <div class="panel-section" id="file-tree-panel">
+        <div class="panel-header">
+            <span>Files</span>
+        </div>
+        <div id="file-tree">
+            <div class="empty-state">Select a project</div>
+        </div>
+    </div>
+</aside>
+
+<!-- Center Panel -->
+<section class="panel-center">
+    <div id="editor-area">
+        <div class="empty-state center-empty">
+            <div class="empty-icon">&#9998;</div>
+            <div>Select a file to edit</div>
+        </div>
+    </div>
+</section>
+
+<!-- Right Panel -->
+<aside class="panel-right">
+    <div class="panel-section" id="git-panel">
+        <div class="panel-header">
+            <span>Git</span>
+        </div>
+        <div id="git-content">
+            <div class="empty-state">Select a project</div>
+        </div>
+    </div>
+
+    <div class="panel-section" id="session-panel">
+        <div class="panel-header">
+            <span>Sessions</span>
+        </div>
+        <div id="session-content">
+            <div class="empty-state">No active sessions</div>
+        </div>
+    </div>
+</aside>
+
+<!-- Bottom Panel (Terminal) -->
+<section class="panel-bottom" id="terminal-container">
+    <div class="panel-header terminal-header">
+        <div class="terminal-tabs" id="terminal-tabs">
+            <span class="empty-state-inline">No terminals</span>
+        </div>
+        <div class="terminal-header-actions">
+            <button class="btn-icon" title="New Terminal" id="btn-new-terminal"
+                    onclick="createTerminal()" disabled>+</button>
+        </div>
+    </div>
+    <div class="terminal-output" id="terminal-output">
+        <div class="empty-state">Open a terminal to get started</div>
+    </div>
+</section>
+{% endblock %}

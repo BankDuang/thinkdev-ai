@@ -1,0 +1,25 @@
+<div class="git-history-view">
+    <div class="git-section-header">
+        <span>Commit History</span>
+        <button class="btn-icon btn-xs" title="Back to status"
+                hx-get="/git/{{ project_id }}/status"
+                hx-target="#git-content"
+                hx-swap="innerHTML">&#8592;</button>
+    </div>
+
+    <div class="git-log-list">
+        {% for entry in entries %}
+        <div class="git-log-entry">
+            <div class="git-log-header">
+                <span class="git-log-hash">{{ entry.short_hash }}</span>
+                <span class="git-log-date">{{ entry.date }}</span>
+            </div>
+            <div class="git-log-message">{{ entry.message }}</div>
+            <div class="git-log-author">{{ entry.author }}</div>
+        </div>
+        {% endfor %}
+        {% if not entries %}
+        <div class="empty-state">No commits yet</div>
+        {% endif %}
+    </div>
+</div>

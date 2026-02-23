@@ -1,0 +1,51 @@
+<div class="modal-overlay" onclick="if(event.target===this) this.remove()">
+    <div class="modal">
+        <div class="modal-header">
+            <span>{% if mode == 'edit' %}Edit Project{% else %}New Project{% endif %}</span>
+            <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">&#10005;</button>
+        </div>
+
+        {% if error %}
+        <div class="form-error">{{ error }}</div>
+        {% endif %}
+
+        <form {% if mode == 'edit' %}
+                hx-put="/projects/{{ project.id }}/update"
+              {% else %}
+                hx-post="/projects/create"
+              {% endif %}
+              hx-target="#project-list"
+              hx-swap="innerHTML"
+              hx-on::after-request="if(event.detail.successful) this.closest('.modal-overlay').remove()">
+
+            <div class="form-group">
+                <label for="name">Project Name</label>
+                <input type="text" id="name" name="name" required
+                       placeholder="my-project"
+                       value="{{ project.name if project else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="2"
+                          placeholder="Optional description">{{ project.description if project else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="git_repository_url">Git Repository URL</label>
+                <input type="text" id="git_repository_url" name="git_repository_url"
+                       placeholder="https://github.com/user/repo.git (optional)"
+                       value="{{ project.git_repository_url if project else '' }}">
+                <small class="form-hint">Leave empty to create an empty project, or provide a URL to clone.</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary"
+                        onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    {% if mode == 'edit' %}Save Changes{% else %}Create Project{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

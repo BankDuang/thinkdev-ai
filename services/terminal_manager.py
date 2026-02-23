@@ -1,0 +1,223 @@
+import os
+import pty
+import signal
+import asyncio
+import fcntl
+import struct
+import termios
+from collections import deque
+from dataclasses import dataclass, field
+from typing import Optional
+
+from config import WORKSPACE_DIR, TERMINAL_BUFFER_SIZE, TERMINAL_SHELL
+
+
+@dataclass
+class SessionInfo:
+    session_id: str
+    project_id: str
+    name: str
+    pid: int
+    fd: int
+    status: str = "running"
+    output_buffer: deque = field(default_factory=lambda: deque(maxlen=TERMINAL_BUFFER_SIZE))
+    _buffer_bytes: int = 0
+
+
+class TerminalSessionManager:
+    _instance: Optional["TerminalSessionManager"] = None
+
+    def __init__(self):
+        self.sessions: dict[str, SessionInfo] = {}
+
+    @classmethod
+    def get_instance(cls) -> "TerminalSessionManager":
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    def create_session(self, session_id: str, project_id: str, name: str = "bash") -> SessionInfo:
+        workspace = WORKSPACE_DIR / project_id
+        workspace.mkdir(parents=True, exist_ok=True)
+
+        pid, fd = pty.openpty()
+        child_pid = os.fork()
+
+        if child_pid == 0:
+            # Child process
+            os.close(pid)
+            os.setsid()
+            # Set the slave as controlling terminal
+            fcntl.ioctl(fd, termios.TIOCSCTTY, 0)
+            os.dup2(fd, 0)
+            os.dup2(fd, 1)
+            os.dup2(fd, 2)
+            if fd > 2:
+                os.close(fd)
+            os.chdir(str(workspace))
+            env = os.environ.copy()
+            env["TERM"] = "xterm-256color"
+            env["HOME"] = os.path.expanduser("~")
+            os.execvpe(TERMINAL_SHELL, [TERMINAL_SHELL, "--login"], env)
+        else:
+            # Parent process
+            os.close(fd)
+            # Set non-blocking
+            flags = fcntl.fcntl(pid, fcntl.F_GETFL)
+            fcntl.fcntl(pid, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+            # Set terminal size (80x24)
+            winsize = struct.pack("HHHH", 24, 80, 0, 0)
+            fcntl.ioctl(pid, termios.TIOCSWINSZ, winsize)
+
+            session = SessionInfo(
+                session_id=session_id,
+                project_id=project_id,
+                name=name,
+                pid=child_pid,
+                fd=pid,
+            )
+            self.sessions[session_id] = session
+            return session
+
+    def get_session(self, session_id: str) -> Optional[SessionInfo]:
+        return self.sessions.get(session_id)
+
+    def write_to_session(self, session_id: str, data: bytes) -> bool:
+        session = self.sessions.get(session_id)
+        if not session or session.status != "running":
+            return False
+        try:
+            os.write(session.fd, data)
+            return True
+        except OSError:
+            return False
+
+    def resize_session(self, session_id: str, rows: int, cols: int) -> bool:
+        session = self.sessions.get(session_id)
+        if not session or session.status != "running":
+            return False
+        try:
+            winsize = struct.pack("HHHH", rows, cols, 0, 0)
+            fcntl.ioctl(session.fd, termios.TIOCSWINSZ, winsize)
+            os.kill(session.pid, signal.SIGWINCH)
+            return True
+        except OSError:
+            return False
+
+    async def read_from_session(self, session_id: str):
+        session = self.sessions.get(session_id)
+        if not session:
+            return
+
+        loop = asyncio.get_event_loop()
+        while session.status == "running":
+            try:
+                data = await loop.run_in_executor(None, self._blocking_read, session.fd)
+                if data:
+                    # Append to buffer
+                    session.output_buffer.append(data)
+                    session._buffer_bytes += len(data)
+                    # Trim buffer if needed
+                    while session._buffer_bytes > TERMINAL_BUFFER_SIZE and session.output_buffer:
+                        removed = session.output_buffer.popleft()
+                        session._buffer_bytes -= len(removed)
+                    yield data
+                else:
+                    await asyncio.sleep(0.01)
+            except OSError:
+                session.status = "stopped"
+                break
+            except Exception:
+                await asyncio.sleep(0.05)
+
+    def _blocking_read(self, fd: int) -> bytes:
+        try:
+            return os.read(fd, 4096)
+        except BlockingIOError:
+            import time
+            time.sleep(0.02)
+            return b""
+        except OSError:
+            raise
+
+    def get_buffer(self, session_id: str) -> bytes:
+        session = self.sessions.get(session_id)
+        if not session:
+            return b""
+        return b"".join(session.output_buffer)
+
+    def clear_buffer(self, session_id: str) -> bool:
+        session = self.sessions.get(session_id)
+        if not session:
+            return False
+        session.output_buffer.clear()
+        session._buffer_bytes = 0
+        return True
+
+    def stop_session(self, session_id: str) -> bool:
+        session = self.sessions.get(session_id)
+        if not session or session.status != "running":
+            return False
+        try:
+            os.kill(session.pid, signal.SIGTERM)
+            session.status = "stopped"
+            return True
+        except OSError:
+            session.status = "stopped"
+            return True
+
+    def kill_session(self, session_id: str) -> bool:
+        session = self.sessions.get(session_id)
+        if not session:
+            return False
+        try:
+            os.kill(session.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        session.status = "stopped"
+        self._close_fd(session)
+        return True
+
+    def remove_session(self, session_id: str) -> bool:
+        session = self.sessions.pop(session_id, None)
+        if not session:
+            return False
+        if session.status == "running":
+            try:
+                os.kill(session.pid, signal.SIGKILL)
+            except OSError:
+                pass
+        self._close_fd(session)
+        # Reap child
+        try:
+            os.waitpid(session.pid, os.WNOHANG)
+        except ChildProcessError:
+            pass
+        return True
+
+    def _close_fd(self, session: SessionInfo):
+        try:
+            os.close(session.fd)
+        except OSError:
+            pass
+
+    def list_sessions(self, project_id: str = None) -> list[SessionInfo]:
+        if project_id:
+            return [s for s in self.sessions.values() if s.project_id == project_id]
+        return list(self.sessions.values())
+
+    def cleanup_all(self):
+        for sid in list(self.sessions.keys()):
+            self.remove_session(sid)
+
+    def _check_alive(self, session: SessionInfo) -> bool:
+        try:
+            pid, status = os.waitpid(session.pid, os.WNOHANG)
+            if pid != 0:
+                session.status = "stopped"
+                return False
+            return True
+        except ChildProcessError:
+            session.status = "stopped"
+            return False

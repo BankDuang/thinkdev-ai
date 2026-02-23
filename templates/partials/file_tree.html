@@ -1,0 +1,66 @@
+{% macro render_node(node, project_id, depth=0) %}
+{% if node.is_dir %}
+<div class="tree-dir" style="padding-left: {{ depth * 14 }}px">
+    <div class="tree-item tree-folder" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="tree-icon">&#9660;</span>
+        <span class="tree-label">{{ node.name }}</span>
+        <div class="tree-actions">
+            <button class="btn-icon btn-xs" title="New file"
+                    onclick="event.stopPropagation(); promptCreateFile('{{ project_id }}', '{{ node.path }}/')">&#43;</button>
+            <button class="btn-icon btn-xs" title="New folder"
+                    onclick="event.stopPropagation(); promptCreateFolder('{{ project_id }}', '{{ node.path }}/')">&#128193;</button>
+            <button class="btn-icon btn-xs" title="Rename"
+                    onclick="event.stopPropagation(); promptRename('{{ project_id }}', '{{ node.path }}')">&#9998;</button>
+            <button class="btn-icon btn-xs btn-danger" title="Delete"
+                    onclick="event.stopPropagation(); confirmDelete('{{ project_id }}', '{{ node.path }}')">&#10005;</button>
+        </div>
+    </div>
+    <div class="tree-children">
+        {% for child in node.children %}
+            {{ render_node(child, project_id, depth + 1) }}
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="tree-item tree-file" style="padding-left: {{ (depth * 14) + 14 }}px"
+     hx-get="/files/{{ project_id }}/read?path={{ node.path }}"
+     hx-target="#editor-area"
+     hx-swap="innerHTML"
+     data-filepath="{{ node.path }}">
+    <span class="tree-icon">&#9702;</span>
+    <span class="tree-label">{{ node.name }}</span>
+    <div class="tree-actions">
+        <button class="btn-icon btn-xs" title="Rename"
+                onclick="event.stopPropagation(); promptRename('{{ project_id }}', '{{ node.path }}')">&#9998;</button>
+        <button class="btn-icon btn-xs btn-danger" title="Delete"
+                onclick="event.stopPropagation(); confirmDelete('{{ project_id }}', '{{ node.path }}')">&#10005;</button>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% if tree %}
+    <div class="file-tree-toolbar">
+        <button class="btn-icon btn-xs" title="New file"
+                onclick="promptCreateFile('{{ project_id }}', '')">&#43; File</button>
+        <button class="btn-icon btn-xs" title="New folder"
+                onclick="promptCreateFolder('{{ project_id }}', '')">&#43; Folder</button>
+    </div>
+    {% for node in tree %}
+        {{ render_node(node, project_id) }}
+    {% endfor %}
+{% else %}
+    <div class="empty-state">Empty project</div>
+    <div class="file-tree-toolbar">
+        <button class="btn-icon btn-xs" title="New file"
+                onclick="promptCreateFile('{{ project_id }}', '')">&#43; File</button>
+        <button class="btn-icon btn-xs" title="New folder"
+                onclick="promptCreateFolder('{{ project_id }}', '')">&#43; Folder</button>
+    </div>
+{% endif %}
+
+{% if toast %}
+<div id="toast-msg" hx-swap-oob="innerHTML:#toast-container">
+    <div class="toast">{{ toast }}</div>
+</div>
+{% endif %}

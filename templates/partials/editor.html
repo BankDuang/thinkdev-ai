@@ -1,0 +1,22 @@
+<div class="editor-container">
+    <div class="editor-header">
+        <div class="editor-filepath" title="{{ file_path }}">
+            <span class="editor-filepath-icon">&#9702;</span>
+            {{ file_path }}
+        </div>
+        <div class="editor-controls">
+            <span id="editor-status">
+                {% include "partials/editor_status.html" %}
+            </span>
+            <button class="btn btn-primary btn-sm"
+                    onclick="saveFile()"
+                    title="Save (Ctrl+S)">Save</button>
+        </div>
+    </div>
+    <textarea id="code-editor"
+              class="code-textarea"
+              spellcheck="false"
+              data-project-id="{{ project_id }}"
+              data-file-path="{{ file_path }}"
+              oninput="markUnsaved()">{{ content }}</textarea>
+</div>

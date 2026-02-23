@@ -1,0 +1,74 @@
+<!-- Terminal tabs bar -->
+<div class="panel-header terminal-header">
+    <div class="terminal-tabs" id="terminal-tabs">
+        {% if sessions %}
+            {% for s in sessions %}
+            <button class="terminal-tab {% if s.session_id == active_session_id %}active{% endif %}"
+                    data-session-id="{{ s.session_id }}"
+                    data-project-id="{{ s.project_id }}"
+                    onclick="switchTerminalTab('{{ s.session_id }}')">
+                <span class="terminal-tab-indicator {{ 'running' if s.status == 'running' else 'stopped' }}"></span>
+                <span class="terminal-tab-name">{{ s.name }}</span>
+                <button class="btn-icon btn-xs terminal-tab-close"
+                        onclick="event.stopPropagation(); closeTerminalTab('{{ s.session_id }}')"
+                        title="Close">&#10005;</button>
+            </button>
+            {% endfor %}
+        {% else %}
+            <span class="empty-state-inline">No terminals</span>
+        {% endif %}
+    </div>
+    <div class="terminal-header-actions">
+        {% if sessions and active_session_id %}
+        <button class="btn-icon btn-xs" title="Clear"
+                onclick="clearTerminal('{{ active_session_id }}')">&#8999;</button>
+        <button class="btn-icon btn-xs" title="Stop"
+                hx-post="/terminal/{{ active_session_id }}/stop"
+                hx-target="#terminal-container"
+                hx-swap="innerHTML">&#9632;</button>
+        <button class="btn-icon btn-xs btn-danger" title="Kill"
+                hx-post="/terminal/{{ active_session_id }}/kill"
+                hx-target="#terminal-container"
+                hx-swap="innerHTML">&#10005;</button>
+        {% endif %}
+        <button class="btn-icon btn-ai" title="Launch opencode"
+                onclick="launchAICLI('opencode')"
+                {% if not project_id %}disabled{% endif %}>&#9881;</button>
+        <button class="btn-icon btn-ai" title="Launch claude"
+                onclick="launchAICLI('claude')"
+                {% if not project_id %}disabled{% endif %}>&#9733;</button>
+        <button class="btn-icon" title="New Terminal" id="btn-new-terminal"
+                onclick="createTerminal()"
+                {% if not project_id %}disabled{% endif %}>+</button>
+    </div>
+</div>
+
+<!-- Terminal output area -->
+<div class="terminal-output" id="terminal-output">
+    {% if sessions and active_session_id %}
+        <div class="terminal-screen" id="terminal-screen"></div>
+    {% else %}
+        <div class="empty-state">Open a terminal to get started</div>
+    {% endif %}
+</div>
+
+{% if sessions and active_session_id %}
+<div class="terminal-input-bar">
+    <input type="text" id="terminal-input" class="terminal-input"
+           placeholder="Type command and press Enter..."
+           onkeydown="handleTerminalInput(event)"
+           autocomplete="off" spellcheck="false">
+</div>
+{% endif %}
+
+<script>
+    {% if active_session_id %}
+    // Auto-connect to active terminal session
+    (function() {
+        if (window._terminalAutoConnect) clearTimeout(window._terminalAutoConnect);
+        window._terminalAutoConnect = setTimeout(function() {
+            connectTerminal('{{ active_session_id }}');
+        }, 100);
+    })();
+    {% endif %}
+</script>
