@@ -66,11 +66,24 @@
 
 <!-- Actions -->
 <div class="git-actions-row">
-    <button class="btn btn-secondary btn-sm"
+    <button class="btn btn-secondary btn-sm git-op-btn"
             hx-post="/git/{{ project_id }}/pull"
             hx-target="#git-content"
             hx-swap="innerHTML"
-            hx-indicator="closest .git-actions-row">Pull</button>
+            hx-confirm="Pull from origin main?"
+            hx-disabled-elt="this">
+        <span class="git-op-label">&#8595; Pull</span>
+        <span class="htmx-indicator git-op-spinner spinner"></span>
+    </button>
+    <button class="btn btn-secondary btn-sm git-op-btn git-push-btn"
+            hx-post="/git/{{ project_id }}/push"
+            hx-target="#git-content"
+            hx-swap="innerHTML"
+            hx-confirm="Push to origin/main?"
+            hx-disabled-elt="this">
+        <span class="git-op-label">&#8593; Push</span>
+        <span class="htmx-indicator git-op-spinner spinner"></span>
+    </button>
     <button class="btn btn-secondary btn-sm"
             hx-post="/git/{{ project_id }}/fetch"
             hx-target="#git-content"

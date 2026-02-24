@@ -146,10 +146,11 @@ async def remove_session(
 
     if project_id:
         sessions = manager.list_sessions(project_id)
+        new_active = sessions[0].session_id if sessions else None
         return templates.TemplateResponse("partials/terminal_panel.html", {
             "request": request,
             "sessions": sessions,
-            "active_session_id": None,
+            "active_session_id": new_active,
             "project_id": project_id,
         })
     return HTMLResponse("")

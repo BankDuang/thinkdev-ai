@@ -723,6 +723,15 @@ body {
     padding: 5px 6px;
 }
 
+/* Pull / Push buttons — loading state */
+.git-op-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.git-op-btn .git-op-spinner { display: none; width: 11px; height: 11px; }
+.git-op-btn.htmx-request .git-op-label { opacity: 0.5; }
+.git-op-btn.htmx-request .git-op-spinner { display: inline-block; }
+.git-op-btn.htmx-request { cursor: wait; opacity: 0.75; }
+.git-push-btn { color: var(--accent); border-color: var(--accent-dim, rgba(129,140,248,0.3)); }
+.git-push-btn:hover { color: #fff; background: var(--gradient-accent); border-color: transparent; }
+
 .git-input {
     width: 100%;
     padding: 7px 10px;

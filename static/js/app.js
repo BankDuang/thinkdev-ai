@@ -392,7 +392,10 @@ function switchTerminalTab(sessionId) {
 }
 
 function closeTerminalTab(sessionId) {
-    disconnectTerminal();
+    var activeTab = document.querySelector('.terminal-tab.active');
+    if (!activeTab || activeTab.dataset.sessionId === sessionId) {
+        disconnectTerminal();
+    }
     fetch('/terminal/' + sessionId, { method: 'DELETE' })
         .then(function(r) { return r.text(); })
         .then(function(html) {

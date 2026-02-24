@@ -130,6 +130,19 @@ async def git_pull(project_id: str, request: Request):
     })
 
 
+@router.post("/{project_id}/push", response_class=HTMLResponse)
+async def git_push(project_id: str, request: Request):
+    ok, msg = await git_service.push(project_id)
+    st = await git_service.status(project_id)
+    return templates.TemplateResponse("partials/git_panel.html", {
+        "request": request,
+        "project_id": project_id,
+        "status": st,
+        "toast": msg if ok else None,
+        "error": msg if not ok else None,
+    })
+
+
 @router.post("/{project_id}/fetch", response_class=HTMLResponse)
 async def git_fetch(project_id: str, request: Request):
     ok, msg = await git_service.fetch(project_id)

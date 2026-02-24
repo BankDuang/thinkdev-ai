@@ -155,9 +155,17 @@ async def commit(project_id: str, message: str) -> tuple[bool, str]:
 
 async def pull(project_id: str) -> tuple[bool, str]:
     path = _project_path(project_id)
-    code, out, err = await _run_git(path, "pull")
+    code, out, err = await _run_git(path, "pull", "origin", "main")
     if code == 0:
-        return True, out.strip()
+        return True, out.strip() or "Already up to date."
+    return False, err.strip()
+
+
+async def push(project_id: str) -> tuple[bool, str]:
+    path = _project_path(project_id)
+    code, out, err = await _run_git(path, "push", "origin", "main")
+    if code == 0:
+        return True, out.strip() or "Pushed to origin/main"
     return False, err.strip()
 
 
