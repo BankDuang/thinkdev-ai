@@ -910,20 +910,26 @@ function _refitXtermDelayed() {
     });
 }
 
-// On mobile, set an explicit pixel height on the terminal container
-// so xterm fit addon calculates the correct number of rows.
+// On mobile, set explicit pixel heights on terminal-output and terminal-xterm
+// using the actual visual viewport, bypassing all CSS layout issues on iOS.
 function _mobileFixTerminalHeight() {
     if (window.innerWidth > 768) return;
     var xtermEl = document.getElementById('terminal-xterm');
     var output = document.getElementById('terminal-output');
     if (!xtermEl || !output) return;
-    // Measure available height: output element's clientHeight
-    // Reset any previous fixed height first so output can flex naturally
-    xtermEl.style.height = '';
-    var h = output.clientHeight;
-    if (h > 0) {
-        xtermEl.style.height = h + 'px';
-    }
+
+    // Get real visual viewport height (works on iOS Chrome & Safari)
+    var vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight) || window.innerHeight;
+
+    // Subtract fixed elements: app-header(46) + terminal-header(34) + ctrl-bar(44) + nav(56)
+    var usedHeight = 46 + 34 + 44 + 56;
+    var availableH = Math.floor(vh - usedHeight);
+    if (availableH < 100) return; // sanity check
+
+    output.style.height = availableH + 'px';
+    output.style.maxHeight = availableH + 'px';
+    output.style.flex = 'none';
+    xtermEl.style.height = availableH + 'px';
 }
 
 // Sync layout classes on resize
