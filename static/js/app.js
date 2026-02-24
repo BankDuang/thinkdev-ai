@@ -898,10 +898,10 @@ function createTerminalMobile() {
 // Delayed refit helper: tries multiple times to ensure xterm gets proper dimensions
 function _refitXtermDelayed() {
     // Use multiple retries because mobile browsers can be slow to reflow
-    [50, 150, 400].forEach(function(delay) {
+    [50, 150, 400, 800].forEach(function(delay) {
         setTimeout(function() {
             if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
-            if (xterm) xterm.focus();
+            if (xterm) { xterm.scrollToBottom(); xterm.focus(); }
         }, delay);
     });
 }

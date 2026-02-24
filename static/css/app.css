@@ -1197,6 +1197,12 @@ body {
         height: 100%;
     }
 
+    /* Mobile ctrl bar — always visible, pinned above bottom nav */
+    .app-layout.mobile-terminal .mobile-ctrl-bar {
+        display: flex !important;
+        flex-shrink: 0;
+    }
+
     /* Git tab: hide left, show right (contains git panel) */
     .app-layout.mobile-git .panel-left   { display: none !important; }
     .app-layout.mobile-git .panel-right {
