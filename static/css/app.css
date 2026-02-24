@@ -1133,34 +1133,48 @@ body {
         overflow: hidden;
     }
 
-    /* All panels hidden + absolutely fill the content area */
+    /* All panels: absolutely fill the content area */
     .app-layout .panel-left,
     .app-layout .panel-center,
     .app-layout .panel-right,
     .app-layout .panel-bottom {
-        display: none;
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
         width: 100%; height: 100%;
     }
+
+    /* Center, right and bottom hidden by default */
+    .app-layout .panel-center,
+    .app-layout .panel-right,
+    .app-layout .panel-bottom { display: none; }
+
+    /* Left (projects) panel visible by default — no JS needed */
+    .app-layout .panel-left { display: flex; flex-direction: column; }
 
     /* Resize handles not needed on mobile */
     #left-resize-handle,
     #right-resize-handle,
     #terminal-resize-handle { display: none; }
 
-    /* ── Active panels ── */
-    .app-layout.mobile-projects .panel-left  { display: flex; flex-direction: column; }
-    .app-layout.mobile-code     .panel-center { display: flex; flex-direction: column; }
+    /* ── Tab-specific overrides ── */
+    /* Code tab: hide left, show center */
+    .app-layout.mobile-code .panel-left  { display: none; }
+    .app-layout.mobile-code .panel-center { display: flex; flex-direction: column; }
+
+    /* Terminal tab: hide left, show bottom */
+    .app-layout.mobile-terminal .panel-left   { display: none; }
     .app-layout.mobile-terminal .panel-bottom { display: flex; flex-direction: column; border-top: none; }
 
+    /* Projects tab: same as default (left visible), explicit for clarity */
+    .app-layout.mobile-projects .panel-left { display: flex; flex-direction: column; }
+
     /* Projects: project list on top (fixed 48% slice), file tree fills rest */
-    .app-layout.mobile-projects .panel-left .panel-section:first-child {
+    .app-layout .panel-left .panel-section:first-child {
         flex: 0 0 48%;
         height: 48%;
         overflow: hidden;
     }
-    .app-layout.mobile-projects .panel-left .panel-section:last-child {
+    .app-layout .panel-left .panel-section:last-child {
         flex: 1;
         min-height: 0;
     }

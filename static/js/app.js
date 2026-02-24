@@ -808,18 +808,25 @@ function switchMobileTab(tab) {
     }
 }
 
-// Restore desktop layout classes when resizing from mobile to desktop
+// Sync layout classes on resize
 window.addEventListener('resize', function() {
+    var layout = document.querySelector('.app-layout');
+    if (!layout) return;
     if (window.innerWidth > 768) {
-        var layout = document.querySelector('.app-layout');
-        if (layout) layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-terminal');
+        // Switching to desktop: remove mobile tab classes
+        layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-terminal');
         if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
+    } else {
+        // Switching to mobile: remove desktop collapsed classes so they don't hide panels
+        layout.classList.remove('left-collapsed', 'right-collapsed');
     }
 });
 
 // Init mobile on page load
 (function() {
     if (window.innerWidth <= 768) {
+        var layout = document.querySelector('.app-layout');
+        if (layout) layout.classList.remove('left-collapsed', 'right-collapsed');
         switchMobileTab('projects');
     }
 })();
