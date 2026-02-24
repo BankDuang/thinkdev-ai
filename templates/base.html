@@ -65,18 +65,22 @@
     <div id="modal-container"></div>
     <div id="toast-container"></div>
 
-    <script src="/static/js/app.js"></script>
-
-    <!-- Mobile Bottom Navigation -->
+    <!-- Mobile Bottom Navigation (must be before app.js so buttons exist when IIFE runs) -->
     <nav class="mobile-nav" id="mobile-nav">
         <button class="mobile-nav-item" id="mnav-projects" onclick="switchMobileTab('projects')">
             <i class="mobile-nav-icon">&#128193;</i>
             <span class="mobile-nav-label">Projects</span>
+        </button>
+        <button class="mobile-nav-item" id="mnav-code" onclick="switchMobileTab('code')">
+            <i class="mobile-nav-icon">&#128196;</i>
+            <span class="mobile-nav-label">Code</span>
         </button>
         <button class="mobile-nav-item" id="mnav-terminal" onclick="switchMobileTab('terminal')">
             <i class="mobile-nav-icon">&gt;_</i>
             <span class="mobile-nav-label">Terminal</span>
         </button>
     </nav>
+
+    <script src="/static/js/app.js"></script>
 </body>
 </html>

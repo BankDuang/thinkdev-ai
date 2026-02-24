@@ -1151,12 +1151,14 @@ body {
 
     /* ── Active panels ── */
     .app-layout.mobile-projects .panel-left  { display: flex; flex-direction: column; }
+    .app-layout.mobile-code     .panel-center { display: flex; flex-direction: column; }
     .app-layout.mobile-terminal .panel-bottom { display: flex; flex-direction: column; border-top: none; }
 
-    /* Projects: project list on top, file tree fills rest */
+    /* Projects: project list on top (fixed 48% slice), file tree fills rest */
     .app-layout.mobile-projects .panel-left .panel-section:first-child {
-        flex: 0 0 auto;
-        max-height: 48%;
+        flex: 0 0 48%;
+        height: 48%;
+        overflow: hidden;
     }
     .app-layout.mobile-projects .panel-left .panel-section:last-child {
         flex: 1;

@@ -191,7 +191,7 @@ function confirmDelete(projectId, path) {
     });
 }
 
-// Highlight active file in tree
+// Highlight active file in tree; auto-switch to code panel on mobile
 document.addEventListener('htmx:afterSwap', function(evt) {
     if (evt.detail.target && evt.detail.target.id === 'editor-area') {
         document.querySelectorAll('.tree-file').forEach(function(el) { el.classList.remove('active'); });
@@ -201,6 +201,10 @@ document.addEventListener('htmx:afterSwap', function(evt) {
             document.querySelectorAll('.tree-file').forEach(function(el) {
                 if (el.dataset.filepath === fp) el.classList.add('active');
             });
+        }
+        // On mobile, auto-switch to the Code tab when a file is opened
+        if (window.innerWidth <= 768) {
+            switchMobileTab('code');
         }
     }
 });
@@ -776,7 +780,7 @@ function switchMobileTab(tab) {
     if (!layout) return;
 
     // Swap mobile panel class
-    layout.classList.remove('mobile-projects', 'mobile-terminal');
+    layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-terminal');
     layout.classList.add('mobile-' + tab);
 
     // Highlight active nav button
@@ -793,6 +797,13 @@ function switchMobileTab(tab) {
         setTimeout(function() {
             if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
             if (xterm) xterm.focus();
+        }, 150);
+    }
+
+    if (tab === 'code') {
+        // Refresh CodeMirror editor size after panel becomes visible
+        setTimeout(function() {
+            if (window.cmEditor) try { window.cmEditor.refresh(); } catch(e) {}
         }, 80);
     }
 }
@@ -801,7 +812,7 @@ function switchMobileTab(tab) {
 window.addEventListener('resize', function() {
     if (window.innerWidth > 768) {
         var layout = document.querySelector('.app-layout');
-        if (layout) layout.classList.remove('mobile-projects', 'mobile-terminal');
+        if (layout) layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-terminal');
         if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
     }
 });
