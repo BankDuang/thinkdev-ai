@@ -1189,20 +1189,26 @@ body {
         width: 100%; height: 100%;
     }
     .app-layout.mobile-terminal .terminal-output {
-        flex: 1;
+        flex: 1 1 0;
         min-height: 0;
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
+        max-height: 100%;
+        overflow: hidden;
     }
     .app-layout.mobile-terminal .terminal-xterm {
         width: 100%;
         height: 100%;
     }
+    /* Allow xterm viewport to scroll with touch on iOS */
+    .app-layout.mobile-terminal .xterm-viewport {
+        -webkit-overflow-scrolling: touch !important;
+    }
 
-    /* Mobile ctrl bar — always visible, pinned above bottom nav */
+    /* Mobile ctrl bar — always visible, fixed size so flex gives it room */
     .app-layout.mobile-terminal .mobile-ctrl-bar {
         display: flex !important;
-        flex-shrink: 0;
+        flex: 0 0 auto;
+        height: 44px;
+        min-height: 44px;
     }
 
     /* Git tab: hide left, show right (contains git panel) */
