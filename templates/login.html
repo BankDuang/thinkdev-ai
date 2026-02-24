@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkDev AI — Login</title>
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg-base);
+        }
+
+        .login-card {
+            width: 360px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-xl);
+            padding: 40px 36px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .login-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .login-logo img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .login-logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .login-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .login-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .login-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow-strong);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--gradient-accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow-accent);
+            transition: opacity 0.15s, transform 0.1s;
+        }
+
+        .login-btn:hover  { opacity: 0.9; }
+        .login-btn:active { transform: scale(0.98); }
+
+        .login-error {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--danger-dim);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            border-radius: var(--radius);
+            color: var(--danger);
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="/static/images/logo.png" alt="ThinkDev AI">
+            <span class="login-logo-text">ThinkDev AI</span>
+        </div>
+
+        {% if error %}
+        <div class="login-error">{{ error }}</div>
+        {% endif %}
+
+        <form class="login-form" method="post" action="/login">
+            <div>
+                <label class="login-label" for="password">Password</label>
+                <input
+                    class="login-input"
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter password"
+                    autofocus
+                    required
+                >
+            </div>
+            <button class="login-btn" type="submit">Sign in</button>
+        </form>
+    </div>
+</body>
+</html>
