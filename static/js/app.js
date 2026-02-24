@@ -901,17 +901,29 @@ function createTerminalMobile() {
 // Delayed refit helper: tries multiple times to ensure xterm gets proper dimensions
 function _refitXtermDelayed() {
     // Use multiple retries because mobile browsers can be slow to reflow
-    [50, 150, 400, 800].forEach(function(delay) {
+    [50, 200, 600].forEach(function(delay) {
         setTimeout(function() {
+            _mobileFixTerminalHeight();
             if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
-            // On mobile, subtract 1 row to prevent last line clipping from subpixel rounding
-            if (xterm && window.innerWidth <= 768 && xterm.rows > 3) {
-                xterm.resize(xterm.cols, xterm.rows - 1);
-                sendTerminalResize();
-            }
             if (xterm) { xterm.scrollToBottom(); xterm.focus(); }
         }, delay);
     });
+}
+
+// On mobile, set an explicit pixel height on the terminal container
+// so xterm fit addon calculates the correct number of rows.
+function _mobileFixTerminalHeight() {
+    if (window.innerWidth > 768) return;
+    var xtermEl = document.getElementById('terminal-xterm');
+    var output = document.getElementById('terminal-output');
+    if (!xtermEl || !output) return;
+    // Measure available height: output element's clientHeight
+    // Reset any previous fixed height first so output can flex naturally
+    xtermEl.style.height = '';
+    var h = output.clientHeight;
+    if (h > 0) {
+        xtermEl.style.height = h + 'px';
+    }
 }
 
 // Sync layout classes on resize
