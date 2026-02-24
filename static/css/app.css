@@ -1084,7 +1084,8 @@ body {
         display: flex;
         position: fixed;
         bottom: 0; left: 0; right: 0;
-        height: 56px;
+        height: calc(56px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
         background: var(--gradient-header);
         border-top: 1px solid var(--border-strong);
         z-index: 200;
@@ -1146,8 +1147,8 @@ body {
         /* Reset desktop grid */
         display: block;
         height: auto;
-        /* Leave room for the fixed mobile nav */
-        margin-bottom: 56px;
+        /* Leave room for the fixed mobile nav + safe area (Safari bottom bar) */
+        margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
         /* undo any position:fixed from earlier experiments */
         top: auto; left: auto; right: auto; bottom: auto;
     }
@@ -1190,7 +1191,8 @@ body {
     .app-layout.mobile-terminal .terminal-output {
         flex: 1;
         min-height: 0;
-        overflow: hidden;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
     }
     .app-layout.mobile-terminal .terminal-xterm {
         width: 100%;
