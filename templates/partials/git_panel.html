@@ -67,22 +67,12 @@
 <!-- Actions -->
 <div class="git-actions-row">
     <button class="btn btn-secondary btn-sm git-op-btn"
-            hx-post="/git/{{ project_id }}/pull"
-            hx-target="#git-content"
-            hx-swap="innerHTML"
-            hx-confirm="Pull from origin main?"
-            hx-disabled-elt="this">
+            onclick="confirmGitOp('pull', '{{ project_id }}', 'Pull from remote?')">
         <span class="git-op-label">&#8595; Pull</span>
-        <span class="htmx-indicator git-op-spinner spinner"></span>
     </button>
     <button class="btn btn-secondary btn-sm git-op-btn git-push-btn"
-            hx-post="/git/{{ project_id }}/push"
-            hx-target="#git-content"
-            hx-swap="innerHTML"
-            hx-confirm="Push to origin/main?"
-            hx-disabled-elt="this">
+            onclick="confirmGitOp('push', '{{ project_id }}', 'Push to remote?')">
         <span class="git-op-label">&#8593; Push</span>
-        <span class="htmx-indicator git-op-spinner spinner"></span>
     </button>
     <button class="btn btn-secondary btn-sm"
             hx-post="/git/{{ project_id }}/fetch"

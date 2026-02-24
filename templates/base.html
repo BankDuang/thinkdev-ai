@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap">
-    <link rel="stylesheet" href="/static/css/app.css?v=4">
+    <link rel="stylesheet" href="/static/css/app.css?v=8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
     <script src="https://unpkg.com/htmx.org@2.0.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
@@ -75,12 +75,16 @@
             <i class="mobile-nav-icon">&#128196;</i>
             <span class="mobile-nav-label">Code</span>
         </button>
+        <button class="mobile-nav-item" id="mnav-git" onclick="switchMobileTab('git')">
+            <i class="mobile-nav-icon">&#9741;</i>
+            <span class="mobile-nav-label">Git</span>
+        </button>
         <button class="mobile-nav-item" id="mnav-terminal" onclick="switchMobileTab('terminal')">
             <i class="mobile-nav-icon">&gt;_</i>
             <span class="mobile-nav-label">Terminal</span>
         </button>
     </nav>
 
-    <script src="/static/js/app.js?v=4"></script>
+    <script src="/static/js/app.js?v=8"></script>
 </body>
 </html>

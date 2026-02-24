@@ -540,6 +540,7 @@ function _updateColumns() {
 }
 
 function toggleLeftPanel() {
+    if (window.innerWidth <= 768) return;
     if (!_leftCollapsed) {
         _leftW = document.querySelector('.panel-left').offsetWidth || 250;
     }
@@ -548,6 +549,7 @@ function toggleLeftPanel() {
 }
 
 function toggleRightPanel() {
+    if (window.innerWidth <= 768) return;
     if (!_rightCollapsed) {
         _rightW = document.querySelector('.panel-right').offsetWidth || 260;
     }
@@ -764,6 +766,65 @@ function showToast(message, type) {
     setTimeout(function() { toast.remove(); }, 3000);
 }
 
+// ═══════════════════════════════════════
+// Git Operations — in-app confirm modal
+// ═══════════════════════════════════════
+
+function confirmGitOp(action, projectId, message) {
+    var container = document.getElementById('modal-container');
+    if (!container) return;
+    var actionLabel = action === 'pull' ? 'Pull' : 'Push';
+    var btnClass = action === 'push' ? 'btn-primary' : 'btn-secondary';
+    container.innerHTML = '<div class="modal-overlay" onclick="closeAppPrompt()">' +
+        '<div class="modal" onclick="event.stopPropagation()">' +
+        '<div class="modal-header"><span>Git ' + actionLabel + '</span>' +
+        '<button class="btn-icon" onclick="closeAppPrompt()">&times;</button></div>' +
+        '<div class="modal-body"><p style="margin:0;color:var(--text-secondary)">' + message + '</p></div>' +
+        '<div class="modal-footer">' +
+        '<button class="btn btn-secondary" onclick="closeAppPrompt()">Cancel</button>' +
+        '<button class="btn ' + btnClass + '" onclick="executeGitOp(\'' + action + '\', \'' + projectId + '\')">' + actionLabel + '</button>' +
+        '</div></div></div>';
+}
+
+function executeGitOp(action, projectId) {
+    closeAppPrompt();
+    showToast('Git ' + action + ' in progress…', 'info');
+    fetch('/git/' + projectId + '/' + action, { method: 'POST' })
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            var el = document.getElementById('git-content');
+            if (el) { el.innerHTML = html; if (window.htmx) htmx.process(el); }
+        })
+        .catch(function() {
+            showToast('Git ' + action + ' failed', 'error');
+        });
+}
+
+function gitPull() {
+    var pid = window.activeProjectId;
+    if (!pid) { showToast('No project selected', 'error'); return; }
+    confirmGitOp('pull', pid, 'Pull from remote?');
+}
+
+function gitPush() {
+    var pid = window.activeProjectId;
+    if (!pid) { showToast('No project selected', 'error'); return; }
+    confirmGitOp('push', pid, 'Push to remote?');
+}
+
+function gitFetch() {
+    var pid = window.activeProjectId;
+    if (!pid) { showToast('No project selected', 'error'); return; }
+    showToast('Fetching…', 'info');
+    fetch('/git/' + pid + '/fetch', { method: 'POST' })
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            var el = document.getElementById('git-content');
+            if (el) { el.innerHTML = html; if (window.htmx) htmx.process(el); }
+        })
+        .catch(function() { showToast('Fetch failed', 'error'); });
+}
+
 // Prevent browser from stealing Ctrl+L when terminal is active
 document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'l' && xterm && terminalWS) {
@@ -779,9 +840,14 @@ function switchMobileTab(tab) {
     var layout = document.querySelector('.app-layout');
     if (!layout) return;
 
-    // Swap mobile panel class
-    layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-terminal');
+    // Swap mobile panel class — make the target panel visible FIRST
+    layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-git', 'mobile-terminal');
     layout.classList.add('mobile-' + tab);
+
+    // Clear any inline grid styles that desktop JS may have set
+    layout.style.gridTemplateColumns = '';
+    layout.style.gridTemplateRows = '';
+    layout.classList.remove('left-collapsed', 'right-collapsed');
 
     // Highlight active nav button
     document.querySelectorAll('.mobile-nav-item').forEach(function(b) { b.classList.remove('active'); });
@@ -791,13 +857,12 @@ function switchMobileTab(tab) {
     if (tab === 'terminal') {
         // Auto-create a terminal if a project is active but none exists yet
         if (window.activeProjectId && !document.querySelector('.terminal-tab')) {
-            createTerminal();
+            // Panel is now visible; create terminal and refit after fetch completes
+            createTerminalMobile();
+        } else {
+            // Terminal already exists — just refit after the panel becomes visible
+            _refitXtermDelayed();
         }
-        // Refit xterm after the panel becomes visible
-        setTimeout(function() {
-            if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
-            if (xterm) xterm.focus();
-        }, 150);
     }
 
     if (tab === 'code') {
@@ -808,13 +873,46 @@ function switchMobileTab(tab) {
     }
 }
 
+// Mobile-specific terminal creation: waits for fetch to complete, then connects + fits
+function createTerminalMobile() {
+    var projectId = window.activeProjectId;
+    if (!projectId) return;
+    var formData = new FormData();
+    formData.append('project_id', projectId);
+    formData.append('name', 'bash');
+    fetch('/terminal/create', { method: 'POST', body: formData })
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            var container = document.getElementById('terminal-container');
+            if (container) { container.innerHTML = html; htmx.process(container); }
+            // Now the DOM has the terminal-xterm div and the panel is visible
+            // Wait a frame for layout to settle, then connect
+            requestAnimationFrame(function() {
+                autoConnectActiveTerminal();
+                // Refit after connection establishes
+                _refitXtermDelayed();
+            });
+        });
+}
+
+// Delayed refit helper: tries multiple times to ensure xterm gets proper dimensions
+function _refitXtermDelayed() {
+    // Use multiple retries because mobile browsers can be slow to reflow
+    [50, 150, 400].forEach(function(delay) {
+        setTimeout(function() {
+            if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
+            if (xterm) xterm.focus();
+        }, delay);
+    });
+}
+
 // Sync layout classes on resize
 window.addEventListener('resize', function() {
     var layout = document.querySelector('.app-layout');
     if (!layout) return;
     if (window.innerWidth > 768) {
         // Switching to desktop: remove mobile tab classes
-        layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-terminal');
+        layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-git', 'mobile-terminal');
         if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
     } else {
         // Switching to mobile: remove desktop collapsed classes so they don't hide panels

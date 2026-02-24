@@ -1162,13 +1162,13 @@ body {
         width: 100%; height: 100%;
     }
 
-    /* Center, right, bottom hidden by default */
+    /* Center, right, bottom hidden by default — use visibility+pointer-events as backup */
     .app-layout .panel-center,
     .app-layout .panel-right,
-    .app-layout .panel-bottom { display: none; }
+    .app-layout .panel-bottom { display: none !important; }
 
     /* Left (projects) panel visible by default — no JS required */
-    .app-layout .panel-left { display: flex; flex-direction: column; }
+    .app-layout .panel-left { display: flex !important; flex-direction: column; }
 
     /* Resize handles not needed on mobile */
     #left-resize-handle,
@@ -1177,15 +1177,36 @@ body {
 
     /* ── Tab-specific overrides ── */
     /* Code tab: hide left, show center */
-    .app-layout.mobile-code .panel-left   { display: none; }
-    .app-layout.mobile-code .panel-center { display: flex; flex-direction: column; }
+    .app-layout.mobile-code .panel-left   { display: none !important; }
+    .app-layout.mobile-code .panel-center { display: flex !important; flex-direction: column; }
 
-    /* Terminal tab: hide left, show bottom */
-    .app-layout.mobile-terminal .panel-left   { display: none; }
-    .app-layout.mobile-terminal .panel-bottom { display: flex; flex-direction: column; border-top: none; }
+    /* Terminal tab: hide left, show bottom — ensure full height and proper flex */
+    .app-layout.mobile-terminal .panel-left   { display: none !important; }
+    .app-layout.mobile-terminal .panel-bottom {
+        display: flex !important; flex-direction: column; border-top: none;
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%; height: 100%;
+    }
+    .app-layout.mobile-terminal .terminal-output {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+    .app-layout.mobile-terminal .terminal-xterm {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Git tab: hide left, show right (contains git panel) */
+    .app-layout.mobile-git .panel-left   { display: none !important; }
+    .app-layout.mobile-git .panel-right {
+        display: flex !important; flex-direction: column; border-left: none;
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%; height: 100%;
+    }
 
     /* Projects tab explicit (same as default, needed for JS switching) */
-    .app-layout.mobile-projects .panel-left { display: flex; flex-direction: column; }
+    .app-layout.mobile-projects .panel-left { display: flex !important; flex-direction: column; }
 
     /* Projects: list on top half, file tree fills rest */
     .app-layout .panel-left .panel-section:first-child {
@@ -1201,6 +1222,10 @@ body {
     /* Hide minimize/maximize (irrelevant on mobile) */
     .terminal-header-actions .btn-icon[title="Minimize"],
     .terminal-header-actions .btn-icon[title="Maximize"] { display: none; }
+
+    /* Hide panel collapse buttons inside panels (they break mobile layout) */
+    .panel-header .btn-icon[title="Collapse Left Panel"],
+    .panel-header .btn-icon[title="Collapse Right Panel"] { display: none; }
 
     /* ── Mobile ctrl bar ── */
     .mobile-ctrl-bar {
