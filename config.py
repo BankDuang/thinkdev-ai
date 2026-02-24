@@ -13,7 +13,7 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 
 SERVER_HOST = os.getenv("THINKDEV_HOST", "0.0.0.0")
-SERVER_PORT = int(os.getenv("THINKDEV_PORT", "8700"))
+SERVER_PORT = int(os.getenv("THINKDEV_PORT", "19080"))
 
 TERMINAL_BUFFER_SIZE = 100 * 1024  # 100KB per session
 TERMINAL_SHELL = os.getenv("SHELL", "/bin/bash")
