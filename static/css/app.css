@@ -1065,9 +1065,9 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
 
 /* ════════════════════════════════════════
-   MOBILE CTRL BAR (hidden on desktop)
+   MOBILE CTRL BAR (hidden on desktop, shown via JS on mobile terminal tab)
 ════════════════════════════════════════ */
-.mobile-ctrl-bar { display: none; }
+#mobile-ctrl-bar { display: none; }
 
 /* ════════════════════════════════════════
    MOBILE NAV (hidden on desktop)
@@ -1140,6 +1140,27 @@ body {
         flex-direction: column;
         overflow: hidden;
     }
+    /* When terminal tab is active, shrink body to also fit ctrl bar above nav */
+    body.mobile-terminal-active {
+        bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    }
+    body.mobile-terminal-active #mobile-ctrl-bar {
+        display: flex;
+        position: fixed;
+        left: 0; right: 0;
+        bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+        height: 44px;
+        z-index: 201;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    body.mobile-terminal-active #mobile-ctrl-bar::-webkit-scrollbar { display: none; }
     .app-header {
         flex-shrink: 0;
         position: relative;
@@ -1208,13 +1229,6 @@ body {
         -webkit-overflow-scrolling: touch !important;
     }
 
-    /* Mobile ctrl bar — always visible, fixed size so flex gives it room */
-    .app-layout.mobile-terminal .mobile-ctrl-bar {
-        display: flex !important;
-        flex: 0 0 auto;
-        height: 44px;
-        min-height: 44px;
-    }
 
     /* Git tab: hide left, show right (contains git panel) */
     .app-layout.mobile-git .panel-left   { display: none !important; }

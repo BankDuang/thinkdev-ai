@@ -844,6 +844,9 @@ function switchMobileTab(tab) {
     layout.classList.remove('mobile-projects', 'mobile-code', 'mobile-git', 'mobile-terminal');
     layout.classList.add('mobile-' + tab);
 
+    // Toggle body class for terminal ctrl bar
+    document.body.classList.toggle('mobile-terminal-active', tab === 'terminal');
+
     // Clear any inline grid styles that desktop JS may have set
     layout.style.gridTemplateColumns = '';
     layout.style.gridTemplateRows = '';

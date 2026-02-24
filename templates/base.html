@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap">
-    <link rel="stylesheet" href="/static/css/app.css?v=12">
+    <link rel="stylesheet" href="/static/css/app.css?v=13">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
     <script src="https://unpkg.com/htmx.org@2.0.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
@@ -65,6 +65,19 @@
     <div id="modal-container"></div>
     <div id="toast-container"></div>
 
+    <!-- Mobile: terminal control keys (fixed above nav, shown only on terminal tab via JS) -->
+    <div class="mobile-ctrl-bar" id="mobile-ctrl-bar">
+        <button class="mobile-ctrl-btn danger" onclick="sendToTerminal('\x03')">^C</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x04')">^D</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x09')">Tab</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[A')">↑</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[B')">↓</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[D')">←</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[C')">→</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x15')">^U</button>
+        <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x0c')">^L</button>
+    </div>
+
     <!-- Mobile Bottom Navigation (must be before app.js so buttons exist when IIFE runs) -->
     <nav class="mobile-nav" id="mobile-nav">
         <button class="mobile-nav-item" id="mnav-projects" onclick="switchMobileTab('projects')">
@@ -85,6 +98,6 @@
         </button>
     </nav>
 
-    <script src="/static/js/app.js?v=10"></script>
+    <script src="/static/js/app.js?v=13"></script>
 </body>
 </html>
