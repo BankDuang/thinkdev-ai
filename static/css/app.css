@@ -1082,6 +1082,7 @@ body {
     /* ── Mobile bottom nav ── */
     .mobile-nav {
         display: flex;
+        flex-shrink: 0;
         position: fixed;
         bottom: 0; left: 0; right: 0;
         height: calc(56px + env(safe-area-inset-bottom, 0px));
@@ -1126,8 +1127,15 @@ body {
     .logo-img   { height: 22px; width: 22px; }
     .header-center { font-size: 11px; padding: 3px 8px; max-width: 150px; }
 
-    /* ── Layout: flex column body — most compatible on all mobile browsers ── */
+    /* ── Layout: fixed shell — prevents iOS Safari page scroll ── */
+    html {
+        height: 100%;
+        overflow: hidden;
+    }
     body {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        bottom: calc(56px + env(safe-area-inset-bottom, 0px));
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -1136,20 +1144,17 @@ body {
         flex-shrink: 0;
         position: relative;
         z-index: 100;
-        /* undo any desktop position overrides */
         top: auto; left: auto; right: auto; bottom: auto;
     }
     .app-layout {
-        flex: 1;
+        flex: 1 1 0;
         min-height: 0;
         position: relative;
         overflow: hidden;
         /* Reset desktop grid */
         display: block;
         height: auto;
-        /* Leave room for the fixed mobile nav + safe area (Safari bottom bar) */
-        margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-        /* undo any position:fixed from earlier experiments */
+        margin-bottom: 0;
         top: auto; left: auto; right: auto; bottom: auto;
     }
 
