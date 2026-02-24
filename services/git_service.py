@@ -163,7 +163,21 @@ async def pull(project_id: str) -> tuple[bool, str]:
 
 async def push(project_id: str) -> tuple[bool, str]:
     path = _project_path(project_id)
-    code, out, err = await _run_git(path, "push", "origin", "main")
+
+    # Stage all changes
+    code, _, err = await _run_git(path, "add", "-A")
+    if code != 0:
+        return False, f"Stage failed: {err.strip()}"
+
+    # Commit if there are staged changes
+    code, _, _ = await _run_git(path, "diff", "--cached", "--quiet")
+    if code != 0:  # non-zero means there are staged changes
+        code, out, err = await _run_git(path, "commit", "-m", "Update")
+        if code != 0:
+            return False, f"Commit failed: {err.strip()}"
+
+    # Push (set upstream automatically if not set)
+    code, out, err = await _run_git(path, "push", "-u", "origin", "main")
     if code == 0:
         return True, out.strip() or "Pushed to origin/main"
     return False, err.strip()
