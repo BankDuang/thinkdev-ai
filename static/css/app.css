@@ -1142,7 +1142,7 @@ body {
     }
     /* When terminal tab is active, shrink body to also fit ctrl bar above nav */
     body.mobile-terminal-active {
-        bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(104px + env(safe-area-inset-bottom, 0px));
     }
     body.mobile-terminal-active #mobile-ctrl-bar {
         display: flex;
@@ -1219,6 +1219,7 @@ body {
         min-height: 0;
         max-height: 100%;
         overflow: hidden;
+        padding-bottom: 4px;
     }
     .app-layout.mobile-terminal .terminal-xterm {
         width: 100%;

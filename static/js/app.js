@@ -904,6 +904,11 @@ function _refitXtermDelayed() {
     [50, 150, 400, 800].forEach(function(delay) {
         setTimeout(function() {
             if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
+            // On mobile, subtract 1 row to prevent last line clipping from subpixel rounding
+            if (xterm && window.innerWidth <= 768 && xterm.rows > 3) {
+                xterm.resize(xterm.cols, xterm.rows - 1);
+                sendTerminalResize();
+            }
             if (xterm) { xterm.scrollToBottom(); xterm.focus(); }
         }, delay);
     });
