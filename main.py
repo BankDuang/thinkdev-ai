@@ -34,4 +34,4 @@ app.include_router(terminal_ws_router)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host=SERVER_HOST, port=SERVER_PORT, reload=True)
+    uvicorn.run("main:app", host=SERVER_HOST, port=SERVER_PORT, reload=False)
