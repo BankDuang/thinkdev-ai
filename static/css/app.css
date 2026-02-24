@@ -1125,30 +1125,40 @@ body {
     .logo-img   { height: 22px; width: 22px; }
     .header-center { font-size: 11px; padding: 3px 8px; max-width: 150px; }
 
-    /* ── Layout: fixed positioning avoids calc(100vh) bugs on mobile browsers ── */
+    /* ── Layout: flex column body — most compatible on all mobile browsers ── */
+    body {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
     .app-header {
-        position: fixed;
-        top: 0; left: 0; right: 0;
+        flex-shrink: 0;
+        position: relative;
         z-index: 100;
+        /* undo any desktop position overrides */
+        top: auto; left: auto; right: auto; bottom: auto;
     }
     .app-layout {
-        position: fixed;
-        top: var(--header-h);
-        left: 0; right: 0;
-        bottom: 56px; /* mobile nav height */
+        flex: 1;
+        min-height: 0;
+        position: relative;
         overflow: hidden;
-        /* Reset grid */
+        /* Reset desktop grid */
         display: block;
         height: auto;
+        /* Leave room for the fixed mobile nav */
+        margin-bottom: 56px;
+        /* undo any position:fixed from earlier experiments */
+        top: auto; left: auto; right: auto; bottom: auto;
     }
 
-    /* All panels fill the fixed container */
+    /* All panels fill the relative layout container */
     .app-layout .panel-left,
     .app-layout .panel-center,
     .app-layout .panel-right,
     .app-layout .panel-bottom {
         position: absolute;
-        inset: 0;
+        top: 0; left: 0; right: 0; bottom: 0;
         width: 100%; height: 100%;
     }
 
@@ -1174,7 +1184,7 @@ body {
     .app-layout.mobile-terminal .panel-left   { display: none; }
     .app-layout.mobile-terminal .panel-bottom { display: flex; flex-direction: column; border-top: none; }
 
-    /* Projects tab: same as default, explicit for JS switching */
+    /* Projects tab explicit (same as default, needed for JS switching) */
     .app-layout.mobile-projects .panel-left { display: flex; flex-direction: column; }
 
     /* Projects: list on top half, file tree fills rest */
