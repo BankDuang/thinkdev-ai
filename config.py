@@ -42,7 +42,7 @@ def _ensure_password():
         with open(_ENV_PATH, "a") as f:
             f.write(f"THINKDEV_PASSWORD={password}\n")
         os.environ["THINKDEV_PASSWORD"] = password
-        print("\n" + "=" * 60)
+        print("\n" + "=" * 61)
         print("  ThinkDev AI — First-time setup")
         print(f"  Password: {password}")
         print(f"  Saved to: {_ENV_PATH}")
