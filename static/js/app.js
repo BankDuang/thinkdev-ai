@@ -767,4 +767,50 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// ═══════════════════════════════════════
+// Mobile Navigation
+// ═══════════════════════════════════════
+
+function switchMobileTab(tab) {
+    var layout = document.querySelector('.app-layout');
+    if (!layout) return;
+
+    // Swap mobile panel class
+    layout.classList.remove('mobile-projects', 'mobile-terminal');
+    layout.classList.add('mobile-' + tab);
+
+    // Highlight active nav button
+    document.querySelectorAll('.mobile-nav-item').forEach(function(b) { b.classList.remove('active'); });
+    var btn = document.getElementById('mnav-' + tab);
+    if (btn) btn.classList.add('active');
+
+    if (tab === 'terminal') {
+        // Auto-create a terminal if a project is active but none exists yet
+        if (window.activeProjectId && !document.querySelector('.terminal-tab')) {
+            createTerminal();
+        }
+        // Refit xterm after the panel becomes visible
+        setTimeout(function() {
+            if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
+            if (xterm) xterm.focus();
+        }, 80);
+    }
+}
+
+// Restore desktop layout classes when resizing from mobile to desktop
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        var layout = document.querySelector('.app-layout');
+        if (layout) layout.classList.remove('mobile-projects', 'mobile-terminal');
+        if (xtermFitAddon) try { xtermFitAddon.fit(); } catch(e) {}
+    }
+});
+
+// Init mobile on page load
+(function() {
+    if (window.innerWidth <= 768) {
+        switchMobileTab('projects');
+    }
+})();
+
 console.log("ThinkDev AI loaded");

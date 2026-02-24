@@ -1063,3 +1063,166 @@ body {
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: var(--bg-elevated); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
+
+/* ════════════════════════════════════════
+   MOBILE CTRL BAR (hidden on desktop)
+════════════════════════════════════════ */
+.mobile-ctrl-bar { display: none; }
+
+/* ════════════════════════════════════════
+   MOBILE NAV (hidden on desktop)
+════════════════════════════════════════ */
+.mobile-nav { display: none; }
+
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE  (≤ 768px)
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* ── Mobile bottom nav ── */
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 56px;
+        background: var(--gradient-header);
+        border-top: 1px solid var(--border-strong);
+        z-index: 200;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.45);
+    }
+    .mobile-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        background: none;
+        border: none;
+        border-top: 2px solid transparent;
+        color: var(--text-muted);
+        font-family: inherit;
+        cursor: pointer;
+        padding: 6px 0;
+        transition: all 0.16s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-nav-item.active {
+        color: var(--accent-bright);
+        border-top-color: var(--accent);
+        background: var(--accent-glow);
+    }
+    .mobile-nav-item:active { opacity: 0.65; }
+    .mobile-nav-icon  { font-size: 18px; line-height: 1; font-style: normal; }
+    .mobile-nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+
+    /* ── Compact header ── */
+    .app-header { padding: 0 10px; }
+    .header-left  > .btn-icon:first-child { display: none; } /* panel toggle */
+    .header-right > .btn-icon:last-child  { display: none; } /* panel toggle */
+    .header-right > span:not(.status-dot) { display: none; } /* "Ready" text */
+    .logo       { font-size: 13px; gap: 7px; }
+    .logo-img   { height: 22px; width: 22px; }
+    .header-center { font-size: 11px; padding: 3px 8px; max-width: 150px; }
+
+    /* ── Layout: single-panel view ── */
+    .app-layout {
+        display: block;
+        height: calc(100vh - var(--header-h) - 56px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* All panels hidden + absolutely fill the content area */
+    .app-layout .panel-left,
+    .app-layout .panel-center,
+    .app-layout .panel-right,
+    .app-layout .panel-bottom {
+        display: none;
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%; height: 100%;
+    }
+
+    /* Resize handles not needed on mobile */
+    #left-resize-handle,
+    #right-resize-handle,
+    #terminal-resize-handle { display: none; }
+
+    /* ── Active panels ── */
+    .app-layout.mobile-projects .panel-left  { display: flex; flex-direction: column; }
+    .app-layout.mobile-terminal .panel-bottom { display: flex; flex-direction: column; border-top: none; }
+
+    /* Projects: project list on top, file tree fills rest */
+    .app-layout.mobile-projects .panel-left .panel-section:first-child {
+        flex: 0 0 auto;
+        max-height: 48%;
+    }
+    .app-layout.mobile-projects .panel-left .panel-section:last-child {
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* Hide minimize/maximize (irrelevant on mobile) */
+    .terminal-header-actions .btn-icon[title="Minimize"],
+    .terminal-header-actions .btn-icon[title="Maximize"] { display: none; }
+
+    /* ── Mobile ctrl bar ── */
+    .mobile-ctrl-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        overflow-x: auto;
+        flex-shrink: 0;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .mobile-ctrl-bar::-webkit-scrollbar { display: none; }
+    .mobile-ctrl-btn {
+        flex-shrink: 0;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-strong);
+        color: var(--text-secondary);
+        padding: 7px 14px;
+        border-radius: var(--radius-sm);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        min-width: 44px;
+        text-align: center;
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.12s;
+        user-select: none;
+    }
+    .mobile-ctrl-btn:active {
+        background: var(--accent-glow-strong);
+        color: var(--accent-bright);
+        border-color: var(--accent-dim);
+        transform: scale(0.93);
+    }
+    .mobile-ctrl-btn.danger:active {
+        background: var(--danger-dim);
+        color: var(--danger);
+        border-color: var(--danger);
+    }
+
+    /* ── Touch-friendly project items ── */
+    .project-item       { padding: 11px 12px; min-height: 46px; }
+    .project-actions    { opacity: 1; }
+    .project-actions .btn-icon { width: 30px; height: 30px; }
+
+    /* ── Touch-friendly file tree ── */
+    .tree-item          { min-height: 36px; padding: 5px 8px; }
+    .tree-actions       { opacity: 1; }
+
+    /* ── Toast above mobile nav ── */
+    #toast-container    { bottom: 68px; }
+
+    /* ── Modal full-width on mobile ── */
+    .modal { width: 95vw; max-width: 95vw; margin: auto; }
+}

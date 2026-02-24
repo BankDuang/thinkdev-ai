@@ -53,3 +53,18 @@
         <div class="empty-state">Open a terminal to get started</div>
     {% endif %}
 </div>
+
+<!-- Mobile: control key shortcuts (hidden on desktop via CSS) -->
+{% if sessions and active_session_id %}
+<div class="mobile-ctrl-bar" id="mobile-ctrl-bar">
+    <button class="mobile-ctrl-btn danger" onclick="sendToTerminal('\x03')" title="Ctrl+C — Interrupt">^C</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x04')" title="Ctrl+D — EOF">^D</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x09')" title="Tab — Autocomplete">Tab</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[A')" title="Arrow Up — History">↑</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[B')" title="Arrow Down — History">↓</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[D')" title="Arrow Left">←</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x1b[C')" title="Arrow Right">→</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x15')" title="Ctrl+U — Clear line">^U</button>
+    <button class="mobile-ctrl-btn" onclick="sendToTerminal('\x0c')" title="Ctrl+L — Clear screen">^L</button>
+</div>
+{% endif %}
