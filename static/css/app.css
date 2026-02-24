@@ -1125,30 +1125,39 @@ body {
     .logo-img   { height: 22px; width: 22px; }
     .header-center { font-size: 11px; padding: 3px 8px; max-width: 150px; }
 
-    /* ── Layout: single-panel view ── */
+    /* ── Layout: fixed positioning avoids calc(100vh) bugs on mobile browsers ── */
+    .app-header {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 100;
+    }
     .app-layout {
-        display: block;
-        height: calc(100vh - var(--header-h) - 56px);
-        position: relative;
+        position: fixed;
+        top: var(--header-h);
+        left: 0; right: 0;
+        bottom: 56px; /* mobile nav height */
         overflow: hidden;
+        /* Reset grid */
+        display: block;
+        height: auto;
     }
 
-    /* All panels: absolutely fill the content area */
+    /* All panels fill the fixed container */
     .app-layout .panel-left,
     .app-layout .panel-center,
     .app-layout .panel-right,
     .app-layout .panel-bottom {
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        inset: 0;
         width: 100%; height: 100%;
     }
 
-    /* Center, right and bottom hidden by default */
+    /* Center, right, bottom hidden by default */
     .app-layout .panel-center,
     .app-layout .panel-right,
     .app-layout .panel-bottom { display: none; }
 
-    /* Left (projects) panel visible by default — no JS needed */
+    /* Left (projects) panel visible by default — no JS required */
     .app-layout .panel-left { display: flex; flex-direction: column; }
 
     /* Resize handles not needed on mobile */
@@ -1158,17 +1167,17 @@ body {
 
     /* ── Tab-specific overrides ── */
     /* Code tab: hide left, show center */
-    .app-layout.mobile-code .panel-left  { display: none; }
+    .app-layout.mobile-code .panel-left   { display: none; }
     .app-layout.mobile-code .panel-center { display: flex; flex-direction: column; }
 
     /* Terminal tab: hide left, show bottom */
     .app-layout.mobile-terminal .panel-left   { display: none; }
     .app-layout.mobile-terminal .panel-bottom { display: flex; flex-direction: column; border-top: none; }
 
-    /* Projects tab: same as default (left visible), explicit for clarity */
+    /* Projects tab: same as default, explicit for JS switching */
     .app-layout.mobile-projects .panel-left { display: flex; flex-direction: column; }
 
-    /* Projects: project list on top (fixed 48% slice), file tree fills rest */
+    /* Projects: list on top half, file tree fills rest */
     .app-layout .panel-left .panel-section:first-child {
         flex: 0 0 48%;
         height: 48%;

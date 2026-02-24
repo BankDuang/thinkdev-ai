@@ -30,6 +30,12 @@ class TerminalSessionManager:
 
     def __init__(self):
         self.sessions: dict[str, SessionInfo] = {}
+        # Per-session: set of asyncio.Queue, one per connected WebSocket client
+        self._subscribers: dict[str, set[asyncio.Queue]] = {}
+        # Per-session: single background PTY reader task
+        self._reader_tasks: dict[str, asyncio.Task] = {}
+        # Per-session: write lock to serialize input from multiple clients
+        self._write_locks: dict[str, asyncio.Lock] = {}
 
     @classmethod
     def get_instance(cls) -> "TerminalSessionManager":
@@ -109,6 +115,8 @@ class TerminalSessionManager:
                 fd=pid,
             )
             self.sessions[session_id] = session
+            # Init per-session multi-client state
+            self._subscribers[session_id] = set()
             return session
 
     def get_session(self, session_id: str) -> Optional[SessionInfo]:
@@ -124,6 +132,12 @@ class TerminalSessionManager:
         except OSError:
             return False
 
+    def get_write_lock(self, session_id: str) -> asyncio.Lock:
+        """Return (lazily created) write lock for a session."""
+        if session_id not in self._write_locks:
+            self._write_locks[session_id] = asyncio.Lock()
+        return self._write_locks[session_id]
+
     def resize_session(self, session_id: str, rows: int, cols: int) -> bool:
         session = self.sessions.get(session_id)
         if not session or session.status != "running":
@@ -136,7 +150,38 @@ class TerminalSessionManager:
         except OSError:
             return False
 
-    async def read_from_session(self, session_id: str):
+    # ------------------------------------------------------------------ #
+    # Multi-client broadcast: one PTY reader, fan-out to subscriber queues
+    # ------------------------------------------------------------------ #
+
+    async def subscribe(self, session_id: str) -> asyncio.Queue:
+        """Register a WebSocket client. Returns a queue that receives PTY bytes.
+        Call unsubscribe() when the client disconnects."""
+        q: asyncio.Queue[Optional[bytes]] = asyncio.Queue(maxsize=512)
+        subs = self._subscribers.setdefault(session_id, set())
+        subs.add(q)
+        # Start/restart the single background reader if needed
+        self._ensure_reader(session_id)
+        return q
+
+    def unsubscribe(self, session_id: str, q: asyncio.Queue) -> None:
+        """Unregister a WebSocket client queue."""
+        subs = self._subscribers.get(session_id)
+        if subs:
+            subs.discard(q)
+
+    def _ensure_reader(self, session_id: str) -> None:
+        """Start the background PTY reader task if it isn't already running."""
+        task = self._reader_tasks.get(session_id)
+        if task is None or task.done():
+            self._reader_tasks[session_id] = asyncio.create_task(
+                self._pty_reader_task(session_id),
+                name=f"pty-reader-{session_id[:8]}",
+            )
+
+    async def _pty_reader_task(self, session_id: str) -> None:
+        """Reads from the PTY once and broadcasts to ALL subscriber queues.
+        This is the ONLY coroutine that calls os.read() on the fd."""
         session = self.sessions.get(session_id)
         if not session:
             return
@@ -146,31 +191,53 @@ class TerminalSessionManager:
             try:
                 data = await loop.run_in_executor(None, self._blocking_read, session.fd)
                 if data:
-                    # Append to buffer
+                    # Append to replay buffer
                     session.output_buffer.append(data)
                     session._buffer_bytes += len(data)
-                    # Trim buffer if needed
                     while session._buffer_bytes > TERMINAL_BUFFER_SIZE and session.output_buffer:
                         removed = session.output_buffer.popleft()
                         session._buffer_bytes -= len(removed)
-                    yield data
+
+                    # Broadcast to every connected client
+                    for q in list(self._subscribers.get(session_id, set())):
+                        try:
+                            q.put_nowait(data)
+                        except asyncio.QueueFull:
+                            pass  # Slow consumer — drop rather than block
                 else:
                     await asyncio.sleep(0.01)
             except OSError:
                 session.status = "stopped"
                 break
+            except asyncio.CancelledError:
+                break
             except Exception:
                 await asyncio.sleep(0.05)
 
-    def _blocking_read(self, fd: int) -> bytes:
-        try:
-            return os.read(fd, 4096)
-        except BlockingIOError:
-            import time
-            time.sleep(0.02)
-            return b""
-        except OSError:
-            raise
+        # Signal all subscribers that the session ended
+        sentinel = None
+        for q in list(self._subscribers.get(session_id, set())):
+            try:
+                q.put_nowait(sentinel)
+            except asyncio.QueueFull:
+                pass
+
+    def _cleanup_session_state(self, session_id: str) -> None:
+        """Cancel reader task and notify remaining subscribers."""
+        task = self._reader_tasks.pop(session_id, None)
+        if task and not task.done():
+            task.cancel()
+
+        subs = self._subscribers.pop(session_id, set())
+        for q in subs:
+            try:
+                q.put_nowait(None)
+            except asyncio.QueueFull:
+                pass
+
+        self._write_locks.pop(session_id, None)
+
+    # ------------------------------------------------------------------ #
 
     def get_buffer(self, session_id: str) -> bytes:
         session = self.sessions.get(session_id)
@@ -208,6 +275,7 @@ class TerminalSessionManager:
             pass
         session.status = "stopped"
         self._close_fd(session)
+        self._cleanup_session_state(session_id)
         return True
 
     def remove_session(self, session_id: str) -> bool:
@@ -220,6 +288,7 @@ class TerminalSessionManager:
             except OSError:
                 pass
         self._close_fd(session)
+        self._cleanup_session_state(session_id)
         # Reap child
         try:
             os.waitpid(session.pid, os.WNOHANG)
@@ -252,3 +321,13 @@ class TerminalSessionManager:
         except ChildProcessError:
             session.status = "stopped"
             return False
+
+    def _blocking_read(self, fd: int) -> bytes:
+        try:
+            return os.read(fd, 4096)
+        except BlockingIOError:
+            import time
+            time.sleep(0.02)
+            return b""
+        except OSError:
+            raise

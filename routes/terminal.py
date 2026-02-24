@@ -171,26 +171,38 @@ async def terminal_websocket(websocket: WebSocket, session_id: str):
         await websocket.close()
         return
 
-    # Replay buffer
+    # Subscribe FIRST so we don't miss data that arrives during buffer replay.
+    # subscribe() has no internal await so no data can slip between subscribe and get_buffer.
+    import asyncio
+    q = await manager.subscribe(session_id)
+
+    # Replay historical buffer to catch up the new client
     buffer = manager.get_buffer(session_id)
     if buffer:
         try:
             await websocket.send_bytes(buffer)
         except Exception:
+            manager.unsubscribe(session_id, q)
             return
 
-    # Bidirectional streaming
-    import asyncio
+    # One lock per session serialises writes from all concurrent clients
+    write_lock = manager.get_write_lock(session_id)
 
     async def read_pty():
+        """Drain this client's queue and forward PTY output to the WebSocket."""
         try:
-            async for data in manager.read_from_session(session_id):
-                if data:
-                    await websocket.send_bytes(data)
+            while True:
+                data = await q.get()
+                if data is None:  # Session ended sentinel
+                    break
+                await websocket.send_bytes(data)
         except (WebSocketDisconnect, Exception):
             pass
+        finally:
+            manager.unsubscribe(session_id, q)
 
     async def write_pty():
+        """Forward WebSocket input to the PTY, serialised via write_lock."""
         import json
         try:
             while True:
@@ -208,9 +220,11 @@ async def terminal_websocket(websocket: WebSocket, session_id: str):
                                 continue
                         except (json.JSONDecodeError, ValueError):
                             pass
-                    manager.write_to_session(session_id, text.encode("utf-8"))
+                    async with write_lock:
+                        manager.write_to_session(session_id, text.encode("utf-8"))
                 elif "bytes" in msg:
-                    manager.write_to_session(session_id, msg["bytes"])
+                    async with write_lock:
+                        manager.write_to_session(session_id, msg["bytes"])
         except (WebSocketDisconnect, Exception):
             pass
 
@@ -222,4 +236,5 @@ async def terminal_websocket(websocket: WebSocket, session_id: str):
     finally:
         read_task.cancel()
         write_task.cancel()
+        manager.unsubscribe(session_id, q)  # Idempotent — safe to call again
         # Session keeps running — don't kill it
